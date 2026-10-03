@@ -16,7 +16,7 @@ config_logger = logging.getLogger(__name__)
 
 # 数据库配置：PostgreSQL
 # 从环境变量获取数据库URL
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://mumuai:password@localhost:5432/mumuai_novel")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://moxiaoyu:password@localhost:5432/moxiaoyu")
 
 config_logger.debug(f"数据库类型: PostgreSQL")
 config_logger.debug(f"数据库URL: {DATABASE_URL}")
@@ -25,8 +25,8 @@ class Settings(BaseSettings):
     """应用配置"""
     
     # 应用配置
-    app_name: str = "MuMuAINovel"
-    app_version: str = "1.5.6"
+    app_name: str = "墨小语"
+    app_version: str = "1.0.0"
     app_host: str = "0.0.0.0"
     app_port: int = 8000
     debug: bool = False
@@ -74,6 +74,8 @@ class Settings(BaseSettings):
     xiaomi_mimo_base_url: str = "https://token-plan-cn.xiaomimimo.com/v1"
     gemini_api_key: Optional[str] = None
     gemini_base_url: Optional[str] = None
+    deepseek_api_key: Optional[str] = None
+    deepseek_base_url: str = "https://api.deepseek.com/v1"
     anthropic_api_key: Optional[str] = None
     anthropic_base_url: Optional[str] = None
     default_ai_provider: str = "openai"
@@ -129,15 +131,15 @@ class Settings(BaseSettings):
     SMTP_USE_TLS: bool = False
     SMTP_USE_SSL: bool = True
     SMTP_FROM_EMAIL: Optional[str] = None
-    SMTP_FROM_NAME: str = "MuMuAINovel"
+    SMTP_FROM_NAME: str = "墨小语"
     EMAIL_AUTH_ENABLED: bool = True
     EMAIL_REGISTER_ENABLED: bool = True
     EMAIL_VERIFICATION_CODE_TTL_MINUTES: int = 10
     EMAIL_VERIFICATION_RESEND_INTERVAL_SECONDS: int = 60
     
     # 提示词工坊配置
-    WORKSHOP_MODE: str = "client"  # client: 本地部署实例, server: 云端中央服务器
-    WORKSHOP_CLOUD_URL: str = "https://mumuverse.space:1566"  # 云端服务地址
+    WORKSHOP_MODE: str = "server"  # client: 本地部署实例, server: 云端中央服务器
+    WORKSHOP_CLOUD_URL: str = ""  # 云端服务地址（server模式下不使用）
     WORKSHOP_API_TIMEOUT: int = 30  # 云端API请求超时时间（秒）
     
     class Config:

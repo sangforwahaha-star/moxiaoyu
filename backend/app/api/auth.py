@@ -291,14 +291,14 @@ def _build_verification_mail_content(scene: str, code: str, ttl_minutes: int) ->
         "reset_password": "重置密码验证码",
     }
     scene_desc_map = {
-        "register": "欢迎注册 MuMuAINovel。",
-        "login": "你正在使用邮箱验证码登录 MuMuAINovel。",
-        "reset_password": "你正在重置 MuMuAINovel 账号密码。",
+        "register": "欢迎注册墨小语。",
+        "login": "你正在使用邮箱验证码登录墨小语。",
+        "reset_password": "你正在重置墨小语账号密码。",
     }
 
     scene_title = scene_title_map.get(scene, "邮箱验证码")
     scene_desc = scene_desc_map.get(scene, "你正在进行邮箱身份验证。")
-    subject = f"MuMuAINovel {scene_title}"
+    subject = f"墨小语 {scene_title}"
     text_body = (
         f"{scene_desc}\n\n"
         f"你的验证码是：{code}\n"
@@ -307,7 +307,7 @@ def _build_verification_mail_content(scene: str, code: str, ttl_minutes: int) ->
     )
     html_body = f"""
     <div style="font-family: Arial, PingFang SC, Microsoft YaHei, sans-serif; line-height: 1.8; color: #1f2937;">
-      <h2 style="margin-bottom: 16px;">MuMuAINovel {scene_title}</h2>
+      <h2 style="margin-bottom: 16px;">墨小语 {scene_title}</h2>
       <p>{scene_desc}</p>
       <p>你的验证码为：</p>
       <div style="display: inline-block; padding: 10px 18px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-size: 28px; font-weight: 700; letter-spacing: 4px; color: #2563eb;">

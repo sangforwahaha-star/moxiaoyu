@@ -7,7 +7,7 @@ on:
   workflow_dispatch:  # 允许手动触发
 
 env:
-  DOCKER_IMAGE: mumujie/mumuainovel
+  DOCKER_IMAGE: moxiaoyu/moxiaoyu
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:

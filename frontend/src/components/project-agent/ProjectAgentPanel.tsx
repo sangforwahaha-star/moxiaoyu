@@ -57,7 +57,7 @@ function AssistantLogo({ size }: { size: number }) {
   return (
     <img
       src="/logo.svg"
-      alt="木木创作助手"
+      alt="墨小语创作助手"
       draggable={false}
       style={{ width: size, height: size, display: 'block', objectFit: 'contain' }}
     />
@@ -185,7 +185,7 @@ export default function ProjectAgentPanel({
           .map(step => step.assistant_message_id as string)
       ));
     } catch (error) {
-      console.error('加载木木创作助手对话失败:', error);
+      console.error('加载墨小语创作助手对话失败:', error);
     } finally {
       setLoadingHistory(false);
     }
@@ -197,7 +197,7 @@ export default function ProjectAgentPanel({
       setConversations(items);
       if (selectLatest && items[0]) await loadConversation(items[0].id);
     } catch (error) {
-      console.error('加载木木创作助手会话列表失败:', error);
+      console.error('加载墨小语创作助手会话列表失败:', error);
     }
   }, [loadConversation, projectId]);
 
@@ -250,7 +250,7 @@ export default function ProjectAgentPanel({
       setExecutionSteps([]);
       setExpandedProcessIds(new Set());
     } catch (error) {
-      console.error('新建木木创作助手对话失败:', error);
+      console.error('新建墨小语创作助手对话失败:', error);
     }
   };
 
@@ -265,7 +265,7 @@ export default function ProjectAgentPanel({
       setExpandedProcessIds(new Set());
       await loadConversations(true);
     } catch (error) {
-      console.error('删除木木创作助手对话失败:', error);
+      console.error('删除墨小语创作助手对话失败:', error);
     }
   };
 
@@ -369,7 +369,7 @@ export default function ProjectAgentPanel({
             : item
         )));
       } else {
-        const detail = (error as Error).message || '木木创作助手请求失败';
+        const detail = (error as Error).message || '墨小语创作助手请求失败';
         message.error(detail);
         setMessages(items => items.map(item => (
           (item.id === streamAssistantId || item.id === assistantId) && !item.content
@@ -405,7 +405,7 @@ export default function ProjectAgentPanel({
       await loadConversations();
     } catch (error) {
       message.error((error as Error).message || '处理修改失败');
-      console.error('处理木木创作助手修改失败:', error);
+      console.error('处理墨小语创作助手修改失败:', error);
       if (activeConversationId) await loadConversation(activeConversationId);
     } finally {
       setDecidingId(undefined);
@@ -675,7 +675,7 @@ export default function ProjectAgentPanel({
       }}>
         <Space size={8}>
           <AssistantLogo size={28} />
-          <Title level={5} style={{ margin: 0 }}>木木创作助手</Title>
+          <Title level={5} style={{ margin: 0 }}>墨小语创作助手</Title>
         </Space>
         <Space size={2}>
           <Dropdown menu={conversationMenu} trigger={['click']}>
@@ -809,7 +809,7 @@ export default function ProjectAgentPanel({
         width: 48, flex: '0 0 48px', borderLeft: `1px solid ${token.colorBorderSecondary}`,
         display: 'flex', justifyContent: 'center', paddingTop: 10, background: token.colorBgContainer,
       }}>
-        <Tooltip title="展开木木创作助手" placement="left">
+        <Tooltip title="展开墨小语创作助手" placement="left">
           <Button type="text" icon={<AssistantLogo size={20} />} onClick={() => changeExpanded(true)} />
         </Tooltip>
       </div>

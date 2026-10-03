@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, Button, Modal, message, Spin, Space, Tag, Typography, Upload, Checkbox, Tooltip, Drawer, Menu, theme, Badge } from 'antd';
-import { EditOutlined, BookOutlined, CalendarOutlined, FileTextOutlined, TrophyOutlined, SettingOutlined, UploadOutlined, ApiOutlined, FileSearchOutlined, MenuUnfoldOutlined, MenuFoldOutlined, BulbOutlined, MoonOutlined, DesktopOutlined, MailOutlined, BellOutlined } from '@ant-design/icons';
+import { EditOutlined, BookOutlined, CalendarOutlined, FileTextOutlined, TrophyOutlined, SettingOutlined, UploadOutlined, ApiOutlined, FileSearchOutlined, MenuUnfoldOutlined, MenuFoldOutlined, BulbOutlined, MoonOutlined, DesktopOutlined, MailOutlined, BellOutlined, CrownOutlined } from '@ant-design/icons';
 import { authApi, projectApi } from '../services/api';
 import { useStore } from '../store';
 import { useProjectSync } from '../store/hooks';
@@ -249,14 +249,6 @@ export default function ProjectList() {
     return date.toLocaleDateString('zh-CN');
   };
 
-  const totalWords = projects.reduce((sum, p) => sum + (p.current_words || 0), 0);
-  const activeProjects = projects.filter(p => p.status === 'writing').length;
-  // 计算已完结项目数（进度>=100%或状态为completed）
-  const completedProjects = projects.filter(p => {
-    const progress = getProgress(p.current_words || 0, p.target_words || 0);
-    return progress >= 100 || p.status === 'completed';
-  }).length;
-
   const handleFileSelect = async (file: File) => {
     setSelectedFile(file);
     setValidationResult(null);
@@ -391,10 +383,10 @@ export default function ProjectList() {
   };
 
   const isMobile = window.innerWidth <= 768;
-  const headerHeight = isMobile ? 56 : 70;
-  const expandedSiderWidth = 220;
+  const headerHeight = 56;
+  const expandedSiderWidth = 200;
   const collapsedSiderWidth = 60;
-  const desktopSiderWidth = collapsed ? collapsedSiderWidth : expandedSiderWidth;
+  const siderWidth = collapsed ? collapsedSiderWidth : expandedSiderWidth;
 
   const currentViewTitle = activeView === 'projects'
     ? '我的书架'
@@ -442,6 +434,16 @@ export default function ProjectList() {
       label: '系统设置',
       children: [
         {
+          key: 'pricing',
+          icon: <CrownOutlined />,
+          label: '订阅套餐',
+        },
+        {
+          key: 'subscription',
+          icon: <CrownOutlined />,
+          label: '我的订阅',
+        },
+        {
           key: 'settings',
           icon: <SettingOutlined />,
           label: 'API 设置',
@@ -451,11 +453,6 @@ export default function ProjectList() {
           icon: <MailOutlined />,
           label: '系统设置',
         }] : []),
-        {
-          key: 'mumu-api',
-          icon: <ApiOutlined />,
-          label: 'MuMuのAPI',
-        },
       ],
     },
   ];
@@ -482,6 +479,16 @@ export default function ProjectList() {
       label: '提示词管理',
     },
     {
+      key: 'pricing',
+      icon: <CrownOutlined />,
+      label: '订阅套餐',
+    },
+    {
+      key: 'subscription',
+      icon: <CrownOutlined />,
+      label: '我的订阅',
+    },
+    {
       key: 'settings',
       icon: <SettingOutlined />,
       label: 'API 设置',
@@ -491,11 +498,6 @@ export default function ProjectList() {
       icon: <MailOutlined />,
       label: '系统设置',
     }] : []),
-    {
-      key: 'mumu-api',
-      icon: <ApiOutlined />,
-      label: 'MuMuのAPI',
-    },
   ];
 
   return (
@@ -511,9 +513,8 @@ export default function ProjectList() {
       {!isMobile && (
         <div
           style={{
-          width: desktopSiderWidth,
-          background: token.colorBgContainer,
-          borderRight: `1px solid ${token.colorBorderSecondary}`,
+          width: siderWidth,
+          background: '#0F172A',
           display: 'flex',
           flexDirection: 'column',
           position: 'fixed',
@@ -523,18 +524,19 @@ export default function ProjectList() {
           height: '100vh',
           overflow: 'hidden',
           transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          boxShadow: `4px 0 16px ${alphaColor(token.colorText, 0.06)}`,
+          boxShadow: '4px 0 16px rgba(0,0,0,0.12)',
           zIndex: 1000
         }}>
           <div style={{
-            height: 70,
+            height: 56,
             display: 'flex',
             alignItems: 'center',
             padding: collapsed ? 0 : '0 12px',
-            background: token.colorPrimary,
+            background: 'transparent',
             flexShrink: 0,
             justifyContent: collapsed ? 'center' : 'space-between',
-            gap: 8
+            gap: 8,
+            borderBottom: '1px solid rgba(255,255,255,0.08)'
           }}>
             {collapsed ? (
               <Button
@@ -542,7 +544,7 @@ export default function ProjectList() {
                 icon={<MenuUnfoldOutlined />}
                 onClick={() => setCollapsed(false)}
                 style={{
-                  color: token.colorWhite,
+                  color: 'rgba(255,255,255,0.65)',
                   width: '100%',
                   height: '100%',
                   padding: 0,
@@ -555,30 +557,17 @@ export default function ProjectList() {
             ) : (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, overflow: 'hidden' }}>
-                  <div style={{
-                    width: 30,
-                    height: 30,
-                    background: alphaColor(token.colorWhite, 0.2),
-                    borderRadius: 8,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: token.colorWhite,
-                    fontSize: 16,
-                    backdropFilter: 'blur(4px)'
-                  }}>
-                    <BookOutlined />
-                  </div>
+                  <img src="/logo.svg" alt="墨小语" style={{ width: 30, height: 30, borderRadius: 8, flexShrink: 0 }} />
                   <span style={{
-                    color: token.colorWhite,
+                    color: '#fff',
                     fontWeight: 600,
                     fontSize: 15,
-                    fontFamily: token.fontFamily,
+                    fontFamily: "'Noto Serif SC', serif",
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis'
                   }}>
-                    MuMuAINovel
+                    墨小语
                   </span>
                 </div>
                 <Button
@@ -586,7 +575,7 @@ export default function ProjectList() {
                   icon={<MenuFoldOutlined />}
                   onClick={() => setCollapsed(true)}
                   style={{
-                    color: token.colorWhite,
+                    color: 'rgba(255,255,255,0.65)',
                     width: 32,
                     height: 32,
                     padding: 0,
@@ -600,15 +589,18 @@ export default function ProjectList() {
           <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
             <Menu
               mode="inline"
+              theme="dark"
               inlineCollapsed={collapsed}
               selectedKeys={[activeView]}
-              style={{ borderRight: 0, paddingTop: 12, width: '100%' }}
+              style={{ borderRight: 0, paddingTop: 12, width: '100%', background: 'transparent' }}
               onClick={({ key }) => {
-                if (key === 'mumu-api') {
-                  window.open('https://zhongzhuan.mumuverse.space/register?aff=gt7d', '_blank', 'noopener,noreferrer');
-                  return;
+                if (key === 'pricing') {
+                  navigate('/pricing');
+                } else if (key === 'subscription') {
+                  navigate('/subscription');
+                } else {
+                  changeView(key as ProjectListView);
                 }
-                changeView(key as ProjectListView);
               }}
               items={collapsed ? sideMenuItemsCollapsed : sideMenuItems}
             />
@@ -616,11 +608,25 @@ export default function ProjectList() {
 
           <div style={{
             padding: collapsed ? '12px 8px' : 16,
-            borderTop: `1px solid ${token.colorBorderSecondary}`,
+            borderTop: '1px solid rgba(255,255,255,0.08)',
             flexShrink: 0
           }}>
             {collapsed ? (
               <Space direction="vertical" style={{ width: '100%', alignItems: 'center' }} size={10}>
+                <Button
+                  type="text"
+                  icon={<CrownOutlined />}
+                  onClick={() => navigate('/pricing')}
+                  title="订阅套餐"
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    background: 'rgba(250, 173, 20, 0.15)',
+                    border: '1px solid rgba(250, 173, 20, 0.3)',
+                    color: '#faad14',
+                  }}
+                />
                 <Button
                   type="text"
                   icon={collapsedThemeIcon}
@@ -630,16 +636,42 @@ export default function ProjectList() {
                     width: 40,
                     height: 40,
                     borderRadius: 20,
-                    background: alphaColor(token.colorBgContainer, 0.65),
-                    border: `1px solid ${token.colorBorder}`,
-                    color: token.colorTextSecondary,
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    color: 'rgba(255,255,255,0.65)',
                   }}
                 />
                 <UserMenu compact />
               </Space>
             ) : (
               <Space direction="vertical" style={{ width: '100%' }} size={12}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: token.colorTextTertiary }}>
+                <div
+                  onClick={() => navigate('/pricing')}
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    background: 'rgba(250, 173, 20, 0.1)',
+                    border: '1px solid rgba(250, 173, 20, 0.2)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(250, 173, 20, 0.18)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(250, 173, 20, 0.1)';
+                  }}
+                >
+                  <CrownOutlined style={{ color: '#faad14', fontSize: 16 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.85)' }}>升级套餐</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>解锁更多 AI 生成次数</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>
                   <span>主题模式</span>
                   <span>{resolvedMode === 'dark' ? '深色' : '浅色'}</span>
                 </div>
@@ -652,17 +684,18 @@ export default function ProjectList() {
       )}
 
       <div style={{
-        background: token.colorPrimary,
+        background: token.colorBgContainer,
         padding: isMobile ? '0 12px' : '0 24px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         position: 'fixed',
         top: 0,
-        left: isMobile ? 0 : desktopSiderWidth,
+        left: isMobile ? 0 : siderWidth,
         right: 0,
         zIndex: 1000,
-        boxShadow: `0 2px 10px ${alphaColor(token.colorText, 0.16)}`,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)',
+        borderBottom: `1px solid ${alphaColor(token.colorText, 0.06)}`,
         height: headerHeight,
         flexShrink: 0,
         transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -677,7 +710,7 @@ export default function ProjectList() {
                 onClick={() => setDrawerVisible(true)}
                 style={{
                   fontSize: 18,
-                  color: token.colorWhite,
+                  color: token.colorText,
                   width: 36,
                   height: 36
                 }}
@@ -686,10 +719,9 @@ export default function ProjectList() {
 
             <h2 style={{
               margin: 0,
-              color: token.colorWhite,
+              color: token.colorText,
               fontSize: 16,
               fontWeight: 600,
-              textShadow: `0 2px 4px ${alphaColor(token.colorText, 0.2)}`,
               flex: 1,
               textAlign: 'center',
               whiteSpace: 'nowrap',
@@ -707,7 +739,7 @@ export default function ProjectList() {
                 onClick={() => setAnnouncementVisible(true)}
                 style={{
                   fontSize: 18,
-                  color: token.colorWhite,
+                  color: token.colorText,
                   width: 36,
                   height: 36
                 }}
@@ -720,10 +752,9 @@ export default function ProjectList() {
 
             <h2 style={{
               margin: 0,
-              color: token.colorWhite,
-              fontSize: '24px',
+              color: token.colorText,
+              fontSize: '20px',
               fontWeight: 600,
-              textShadow: `0 2px 4px ${alphaColor(token.colorText, 0.2)}`,
               position: 'absolute',
               left: '50%',
               transform: 'translateX(-50%)',
@@ -735,71 +766,21 @@ export default function ProjectList() {
               {currentViewTitle}
             </h2>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, zIndex: 1 }}>
               <Badge dot={hasUnreadAnnouncements} offset={[-4, 4]}>
                 <Button
                   type="text"
                   icon={<BellOutlined />}
                   onClick={() => setAnnouncementVisible(true)}
                   style={{
-                    color: token.colorWhite,
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
-                    background: alphaColor(token.colorWhite, 0.12),
-                    border: `1px solid ${alphaColor(token.colorWhite, 0.18)}`,
+                    color: token.colorTextSecondary,
+                    width: 36,
+                    height: 36,
+                    borderRadius: 8,
                   }}
                   title="系统公告"
                 />
               </Badge>
-              {activeView === 'projects' && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-                  {projects.length > 0 && (
-                    <div style={{ display: 'flex', gap: '16px' }}>
-                      {[
-                        { label: '创作中', value: activeProjects, unit: '本' },
-                        { label: '已完结', value: completedProjects, unit: '本' },
-                        { label: '总字数', value: totalWords, unit: '字' },
-                      ].map((item, index) => (
-                        <div
-                          key={index}
-                          style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backdropFilter: 'blur(4px)',
-                            borderRadius: '28px',
-                            minWidth: '56px',
-                            height: '56px',
-                            padding: '0 12px',
-                            boxShadow: `inset 0 0 15px ${alphaColor(token.colorWhite, 0.15)}, 0 4px 10px ${alphaColor(token.colorText, 0.1)}`,
-                            cursor: 'default',
-                            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
-                            e.currentTarget.style.boxShadow = `inset 0 0 20px ${alphaColor(token.colorWhite, 0.25)}, 0 8px 16px ${alphaColor(token.colorText, 0.15)}`;
-                            e.currentTarget.style.border = `1px solid ${alphaColor(token.colorWhite, 0.1)}`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                            e.currentTarget.style.boxShadow = `inset 0 0 15px ${alphaColor(token.colorWhite, 0.15)}, 0 4px 10px ${alphaColor(token.colorText, 0.1)}`;
-                          }}
-                        >
-                          <span style={{ fontSize: '11px', color: alphaColor(token.colorWhite, 0.9), marginBottom: '2px', lineHeight: 1 }}>
-                            {item.label}
-                          </span>
-                          <span style={{ fontSize: '15px', fontWeight: '600', color: token.colorWhite, lineHeight: 1, fontFamily: 'Monaco, monospace' }}>
-                            {item.label === '总字数' ? formatWordCount(item.value) : item.value}
-                            {item.unit && <span style={{ fontSize: '10px', marginLeft: '2px', opacity: 0.8 }}>{item.unit}</span>}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           </>
         )}
@@ -809,50 +790,46 @@ export default function ProjectList() {
         <Drawer
           title={
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{
-                width: 30,
-                height: 30,
-                background: token.colorPrimary,
-                borderRadius: 8,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: token.colorWhite,
-                fontSize: 16,
-              }}>
-                <BookOutlined />
-              </div>
-              <span style={{ fontWeight: 600, fontSize: 16, fontFamily: token.fontFamily }}>MuMuAINovel</span>
+              <img src="/logo.svg" alt="墨小语" style={{ width: 30, height: 30, borderRadius: 8 }} />
+              <span style={{ fontWeight: 600, fontSize: 16, fontFamily: "'Noto Serif SC', serif" }}>墨小语</span>
             </div>
           }
           placement="left"
           onClose={() => setDrawerVisible(false)}
           open={drawerVisible}
           width={280}
-          styles={{ body: { padding: 0, display: 'flex', flexDirection: 'column' } }}
+          styles={{ body: { padding: 0, display: 'flex', flexDirection: 'column', background: '#0F172A' }, header: { display: 'none' } }}
         >
           <div style={{ flex: 1, overflowY: 'auto' }}>
+            <div style={{ padding: '16px 16px 8px', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <img src="/logo.svg" alt="墨小语" style={{ width: 30, height: 30, borderRadius: 8 }} />
+              <span style={{ fontWeight: 600, fontSize: 15, color: '#fff', fontFamily: "'Noto Serif SC', serif" }}>墨小语</span>
+            </div>
             <Menu
               mode="inline"
+              theme="dark"
               selectedKeys={[activeView]}
-              style={{ borderRight: 0, paddingTop: 8 }}
+              style={{ borderRight: 0, paddingTop: 8, background: 'transparent' }}
               onClick={({ key }) => {
-                if (key === 'mumu-api') {
-                  window.open('https://zhongzhuan.mumuverse.space/register?aff=gt7d', '_blank', 'noopener,noreferrer');
+                if (key === 'pricing') {
                   setDrawerVisible(false);
-                  return;
+                  navigate('/pricing');
+                } else if (key === 'subscription') {
+                  setDrawerVisible(false);
+                  navigate('/subscription');
+                } else {
+                  changeView(key as ProjectListView);
+                  setDrawerVisible(false);
                 }
-                changeView(key as ProjectListView);
-                setDrawerVisible(false);
               }}
               items={sideMenuItems}
             />
 
           </div>
 
-          <div style={{ padding: 16, borderTop: `1px solid ${token.colorBorderSecondary}` }}>
+          <div style={{ padding: 16, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
             <Space direction="vertical" style={{ width: '100%' }} size={12}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: token.colorTextTertiary }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>
                 <span>主题模式</span>
                 <span>{resolvedMode === 'dark' ? '深色' : '浅色'}</span>
               </div>
@@ -869,7 +846,7 @@ export default function ProjectList() {
         flexDirection: 'column',
         height: '100%',
         overflow: 'hidden',
-        marginLeft: isMobile ? 0 : desktopSiderWidth,
+        marginLeft: isMobile ? 0 : siderWidth,
         marginTop: headerHeight,
         transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
       }}>
@@ -884,7 +861,7 @@ export default function ProjectList() {
               ? (isMobile ? '20px 16px 70px' : '24px 24px 70px')
               : 0,
             background: activeView === 'projects'
-              ? `linear-gradient(180deg, ${alphaColor(token.colorPrimary, 0.04)} 0%, ${token.colorBgLayout} 26%)`
+              ? token.colorBgLayout
               : token.colorBgLayout,
           }}
         >

@@ -56,6 +56,7 @@ from app.services.plot_analyzer import PlotAnalyzer
 from app.services.memory_service import memory_service
 from app.services.foreshadow_service import foreshadow_service
 from app.services.chapter_regenerator import ChapterRegenerator
+from app.services.subscription_service import check_and_increment_usage
 from app.logger import get_logger
 from app.api.settings import get_user_ai_service, get_user_ai_service_from_db_by_usage
 from app.utils.sse_response import SSEResponse, create_sse_response
@@ -1458,6 +1459,23 @@ async def generate_chapter_content_stream(
     custom_model = generate_request.model if hasattr(generate_request, 'model') else None
     temp_narrative_perspective = generate_request.narrative_perspective if hasattr(generate_request, 'narrative_perspective') else None
     skill_key = generate_request.skill_key if hasattr(generate_request, 'skill_key') else None
+
+    # 订阅次数检查
+    current_user_id = getattr(request.state, "user_id", "system")
+    if current_user_id != "system":
+        usage_result = await check_and_increment_usage(current_user_id)
+        if not usage_result['allowed']:
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    'message': usage_result['reason'],
+                    'subscription_level': usage_result.get('subscription_level'),
+                    'daily_generation_used': usage_result.get('daily_generation_used'),
+                    'daily_generation_limit': usage_result.get('daily_generation_limit'),
+                    'upgrade_hint': usage_result.get('upgrade_hint'),
+                }
+            )
+
     # 预先验证章节存在性（使用临时会话）
     async for temp_db in get_db(request):
         try:
@@ -2007,6 +2025,20 @@ async def generate_chapter_content_background(
     analysis_ready, analysis_msg = await check_previous_analysis_ready(db, chapter)
     if not analysis_ready:
         raise HTTPException(status_code=409, detail=analysis_msg)
+
+    # 订阅次数检查
+    usage_result = await check_and_increment_usage(user_id)
+    if not usage_result['allowed']:
+        raise HTTPException(
+            status_code=429,
+            detail={
+                'message': usage_result['reason'],
+                'subscription_level': usage_result.get('subscription_level'),
+                'daily_generation_used': usage_result.get('daily_generation_used'),
+                'daily_generation_limit': usage_result.get('daily_generation_limit'),
+                'upgrade_hint': usage_result.get('upgrade_hint'),
+            }
+        )
 
     # 创建后台任务
     from app.services.background_task_service import background_task_service, TaskProgressTracker
@@ -3632,7 +3664,27 @@ async def batch_generate_chapters_in_order(
     
     if not chapters_to_generate:
         raise HTTPException(status_code=404, detail="指定范围内没有章节")
-    
+
+    # 订阅次数检查（批量生成需要足够的剩余次数）
+    from app.services.subscription_service import get_user_subscription
+    sub_info = await get_user_subscription(user_id)
+    remaining = sub_info['daily_generation_remaining'] if sub_info else 0
+    needed = len(chapters_to_generate)
+    if remaining < needed:
+        raise HTTPException(
+            status_code=429,
+            detail={
+                'message': f'今日剩余生成次数不足，需要{needed}次，仅剩{remaining}次',
+                'subscription_level': sub_info.get('subscription_level') if sub_info else 'free',
+                'daily_generation_used': sub_info.get('daily_generation_used') if sub_info else 0,
+                'daily_generation_limit': sub_info.get('daily_generation_limit') if sub_info else 3,
+                'upgrade_hint': f'升级到基础版可获得每日30次生成机会',
+            }
+        )
+    # 预扣次数
+    for _ in range(needed):
+        await check_and_increment_usage(user_id)
+
     # 验证起始章节的前置条件
     first_chapter = chapters_to_generate[0]
     can_generate, error_msg, _ = await check_prerequisites(db, first_chapter)
@@ -4484,7 +4536,21 @@ async def regenerate_chapter_stream(
     
     # 验证用户权限
     await verify_project_access(chapter.project_id, user_id, db)
-    
+
+    # 订阅次数检查
+    usage_result = await check_and_increment_usage(user_id)
+    if not usage_result['allowed']:
+        raise HTTPException(
+            status_code=429,
+            detail={
+                'message': usage_result['reason'],
+                'subscription_level': usage_result.get('subscription_level'),
+                'daily_generation_used': usage_result.get('daily_generation_used'),
+                'daily_generation_limit': usage_result.get('daily_generation_limit'),
+                'upgrade_hint': usage_result.get('upgrade_hint'),
+            }
+        )
+
     # 获取分析结果（如果使用分析建议）
     analysis = None
     if regenerate_request.modification_source in ['analysis_suggestions', 'mixed']:

@@ -2,17 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Button,
-  Card,
-  Col,
-  Divider,
+  Collapse,
   Form,
   Input,
-  Layout,
-  Row,
   Space,
   Spin,
   Tabs,
-  Tag,
   Typography,
   message,
   theme,
@@ -21,6 +16,7 @@ import {
   BookOutlined,
   LockOutlined,
   MailOutlined,
+  QuestionCircleOutlined,
   RobotOutlined,
   SafetyCertificateOutlined,
   TeamOutlined,
@@ -29,10 +25,9 @@ import {
 } from '@ant-design/icons';
 import { authApi } from '../services/api';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import AnnouncementModal from '../components/AnnouncementModal';
 import ThemeSwitch from '../components/ThemeSwitch';
 
-const { Title, Paragraph, Text } = Typography;
+const { Text } = Typography;
 
 interface AuthConfig {
   local_auth_enabled: boolean;
@@ -82,10 +77,6 @@ export default function Login() {
   const [emailRegisterForm] = Form.useForm<EmailRegisterValues>();
   const [resetPasswordForm] = Form.useForm<ResetPasswordValues>();
   const { token } = theme.useToken();
-  const alphaColor = (color: string, alpha: number) => `color-mix(in srgb, ${color} ${(alpha * 100).toFixed(0)}%, transparent)`;
-  const primaryButtonShadow = `0 8px 20px ${alphaColor(token.colorPrimary, 0.28)}`;
-  const hoverButtonShadow = `0 12px 28px ${alphaColor(token.colorPrimary, 0.36)}`;
-  const [showAnnouncement, setShowAnnouncement] = useState(false);
   const [loginCodeSending, setLoginCodeSending] = useState(false);
   const [registerCodeSending, setRegisterCodeSending] = useState(false);
   const [resetCodeSending, setResetCodeSending] = useState(false);
@@ -105,26 +96,13 @@ export default function Login() {
       { value: registerCountdown, setter: setRegisterCountdown },
       { value: resetCountdown, setter: setResetCountdown },
     ].map(({ value, setter }) => {
-      if (value <= 0) {
-        return null;
-      }
-
+      if (value <= 0) return null;
       return window.setInterval(() => {
-        setter((prev) => {
-          if (prev <= 1) {
-            return 0;
-          }
-          return prev - 1;
-        });
+        setter((prev) => (prev <= 1 ? 0 : prev - 1));
       }, 1000);
     });
-
     return () => {
-      timers.forEach((timer) => {
-        if (timer) {
-          window.clearInterval(timer);
-        }
-      });
+      timers.forEach((timer) => { if (timer) window.clearInterval(timer); });
     };
   }, [loginCountdown, registerCountdown, resetCountdown]);
 
@@ -154,27 +132,16 @@ export default function Login() {
   }, [navigate, searchParams]);
 
   const handleLoginSuccess = () => {
-    message.success('登录成功！');
-
-    const hideForever = localStorage.getItem('announcement_hide_forever');
-    const hideToday = localStorage.getItem('announcement_hide_today');
-    const today = new Date().toDateString();
-
-    if (hideForever === 'true' || hideToday === today) {
-      const redirect = searchParams.get('redirect') || '/';
-      navigate(redirect);
-    } else {
-      setShowAnnouncement(true);
-    }
+    message.success('登录成功');
+    const redirect = searchParams.get('redirect') || '/';
+    navigate(redirect);
   };
 
   const handleLocalLogin = async (values: LocalLoginValues) => {
     try {
       setLoading(true);
       const response = await authApi.localLogin(values.username, values.password);
-      if (response.success) {
-        handleLoginSuccess();
-      }
+      if (response.success) handleLoginSuccess();
     } catch (error) {
       console.error('本地登录失败:', error);
     } finally {
@@ -185,13 +152,8 @@ export default function Login() {
   const handleEmailLogin = async (values: EmailLoginValues) => {
     try {
       setLoading(true);
-      const response = await authApi.emailLogin({
-        email: values.email,
-        code: values.code,
-      });
-      if (response.success) {
-        handleLoginSuccess();
-      }
+      const response = await authApi.emailLogin({ email: values.email, code: values.code });
+      if (response.success) handleLoginSuccess();
     } catch (error) {
       console.error('邮箱验证码登录失败:', error);
     } finally {
@@ -286,12 +248,8 @@ export default function Login() {
     try {
       setLoading(true);
       const response = await authApi.getLinuxDOAuthUrl();
-
       const redirect = searchParams.get('redirect');
-      if (redirect) {
-        sessionStorage.setItem('login_redirect', redirect);
-      }
-
+      if (redirect) sessionStorage.setItem('login_redirect', redirect);
       window.location.href = response.auth_url;
     } catch (error) {
       console.error('获取授权地址失败:', error);
@@ -300,286 +258,128 @@ export default function Login() {
     }
   };
 
-  const handleAnnouncementClose = () => {
-    setShowAnnouncement(false);
-    const redirect = searchParams.get('redirect') || '/';
-    navigate(redirect);
-  };
-
-  const handleDoNotShowToday = () => {
-    const today = new Date().toDateString();
-    localStorage.setItem('announcement_hide_today', today);
-  };
-
-  const handleNeverShow = () => {
-    localStorage.setItem('announcement_hide_forever', 'true');
-  };
-
   const loginTips = useMemo(() => {
-    const tips = [
-      '首次 LinuxDO 登录会自动创建账号。',
-    ];
-
-    if (localAuthEnabled) {
-      tips.unshift('本地登录默认账号：admin / admin123');
-    }
-
-    if (emailAuthEnabled) {
-      tips.push('邮箱注册用户支持通过邮箱验证码重置密码。');
-    }
-
+    const tips: string[] = [];
+    if (localAuthEnabled) tips.push('本地登录默认账号：admin / admin123');
+    tips.push('首次 LinuxDO 登录会自动创建账号');
+    if (emailAuthEnabled) tips.push('邮箱注册用户支持通过验证码重置密码');
     return tips;
   }, [emailAuthEnabled, localAuthEnabled]);
 
   const featureItems = [
-    {
-      icon: <RobotOutlined />,
-      title: '多 AI 模型协同',
-      description: '支持 OpenAI、Gemini、Claude 等主流模型，按场景灵活切换。',
-    },
-    {
-      icon: <ThunderboltOutlined />,
-      title: '智能向导驱动',
-      description: '自动生成大纲、角色与世界观，快速搭建完整故事骨架。',
-    },
-    {
-      icon: <TeamOutlined />,
-      title: '角色组织管理',
-      description: '人物关系、组织架构可视化管理，复杂设定也能清晰掌控。',
-    },
-    {
-      icon: <BookOutlined />,
-      title: '章节创作闭环',
-      description: '支持章节生成、编辑、重写与润色，持续提升内容质量。',
-    },
+    { icon: <RobotOutlined />, title: '多模型协同', desc: 'OpenAI / Gemini / Claude 灵活切换' },
+    { icon: <ThunderboltOutlined />, title: '智能大纲', desc: 'AI 驱动的故事骨架自动生成' },
+    { icon: <TeamOutlined />, title: '角色管理', desc: '人物关系可视化，设定清晰掌控' },
+    { icon: <BookOutlined />, title: '章节闭环', desc: '生成、精修、重写一站式完成' },
   ];
+
+  const inputStyle = { height: 44, borderRadius: 8 };
 
   const renderLocalLogin = () => (
     <>
-      <Form
-        form={localForm}
-        layout="vertical"
-        onFinish={handleLocalLogin}
-        size="large"
-        style={{ marginTop: 16 }}
-      >
-        <Form.Item
-          name="username"
-          label="管理账号"
-          rules={[{ required: true, message: '请输入管理账号/邮箱' }]}
-        >
+      <Form form={localForm} layout="vertical" onFinish={handleLocalLogin} size="large" style={{ marginTop: 8 }}>
+        <Form.Item name="username" rules={[{ required: true, message: '请输入账号' }]}>
           <Input
-            prefix={<UserOutlined style={{ color: token.colorTextTertiary }} />}
-            placeholder="请输入管理账号/邮箱"
+            prefix={<UserOutlined style={{ color: token.colorTextQuaternary }} />}
+            placeholder="账号 / 邮箱"
             autoComplete="username"
-            style={{ height: 46, borderRadius: 12 }}
+            style={inputStyle}
           />
         </Form.Item>
-        <Form.Item
-          name="password"
-          label="访问密钥"
-          rules={[{ required: true, message: '请输入访问密钥' }]}
-        >
+        <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }]}>
           <Input.Password
-            prefix={<LockOutlined style={{ color: token.colorTextTertiary }} />}
-            placeholder="请输入访问密钥"
+            prefix={<LockOutlined style={{ color: token.colorTextQuaternary }} />}
+            placeholder="密码"
             autoComplete="current-password"
-            style={{ height: 46, borderRadius: 12 }}
+            style={inputStyle}
           />
         </Form.Item>
-        <Form.Item style={{ marginBottom: 0, marginTop: 8 }}>
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={loading}
-            block
-            style={{
-              height: 46,
-              fontSize: 16,
-              fontWeight: 600,
-              background: `linear-gradient(90deg, ${token.colorPrimary} 0%, ${alphaColor(token.colorPrimary, 0.86)} 100%)`,
-              border: 'none',
-              borderRadius: '12px',
-              boxShadow: primaryButtonShadow,
-            }}
-          >
-            登录系统
+        <Form.Item style={{ marginBottom: 0, marginTop: 4 }}>
+          <Button type="primary" htmlType="submit" loading={loading} block className="login-primary-btn">
+            登录
           </Button>
         </Form.Item>
       </Form>
-
-      {linuxdoEnabled ? (
+      {linuxdoEnabled && (
         <>
-          <Divider style={{ margin: '18px 0 16px' }}>第三方登录</Divider>
+          <div className="login-divider">或</div>
           {renderLinuxDOLogin()}
         </>
-      ) : null}
+      )}
     </>
   );
 
   const renderEmailLogin = () => {
     if (showResetPassword) {
       return (
-        <div style={{ marginTop: 16 }}>
-          <Space direction="vertical" size={12} style={{ width: '100%' }}>
-            <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-              <Title level={5} style={{ margin: 0 }}>忘记密码 / 重置密码</Title>
-              <Button type="link" style={{ paddingInline: 0 }} onClick={() => setShowResetPassword(false)}>
-                返回验证码登录
-              </Button>
-            </Space>
-
-            <Card size="small" bordered={false} style={{ borderRadius: 12, background: token.colorFillAlter }}>
-              <Form
-                form={resetPasswordForm}
-                layout="vertical"
-                onFinish={handleResetPassword}
-                size="middle"
-              >
-                <Form.Item
-                  name="email"
-                  label="注册邮箱"
-                  rules={[
-                    { required: true, message: '请输入注册邮箱' },
-                    { type: 'email', message: '请输入有效的邮箱地址' },
-                  ]}
-                >
-                  <Input prefix={<MailOutlined />} placeholder="请输入注册邮箱" />
+        <div style={{ marginTop: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Text strong style={{ fontSize: 15 }}>重置密码</Text>
+            <Button type="link" size="small" style={{ padding: 0 }} onClick={() => setShowResetPassword(false)}>
+              返回登录
+            </Button>
+          </div>
+          <Form form={resetPasswordForm} layout="vertical" onFinish={handleResetPassword}>
+            <Form.Item name="email" rules={[{ required: true, message: '请输入邮箱' }, { type: 'email', message: '邮箱格式不正确' }]}>
+              <Input prefix={<MailOutlined />} placeholder="注册邮箱" style={inputStyle} />
+            </Form.Item>
+            <Form.Item label="验证码" required>
+              <Space.Compact style={{ width: '100%' }}>
+                <Form.Item name="code" noStyle rules={[{ required: true, message: '请输入验证码' }, { len: 6, message: '验证码为 6 位' }]}>
+                  <Input placeholder="6 位验证码" maxLength={6} style={{ ...inputStyle, borderRadius: '8px 0 0 8px' }} />
                 </Form.Item>
-                <Form.Item label="重置验证码" required style={{ marginBottom: 12 }}>
-                  <Space.Compact style={{ width: '100%' }}>
-                    <Form.Item
-                      name="code"
-                      noStyle
-                      rules={[
-                        { required: true, message: '请输入重置验证码' },
-                        { len: 6, message: '验证码长度为 6 位' },
-                      ]}
-                    >
-                      <Input placeholder="请输入重置验证码" maxLength={6} />
-                    </Form.Item>
-                    <Button
-                      onClick={sendResetCode}
-                      loading={resetCodeSending}
-                      disabled={resetCountdown > 0}
-                    >
-                      {resetCountdown > 0 ? `${resetCountdown}s 后重发` : '发送验证码'}
-                    </Button>
-                  </Space.Compact>
-                </Form.Item>
-                <Form.Item
-                  name="new_password"
-                  label="新密码"
-                  rules={[
-                    { required: true, message: '请输入新密码' },
-                    { min: 6, message: '密码长度至少为 6 个字符' },
-                  ]}
-                >
-                  <Input.Password prefix={<LockOutlined />} placeholder="请输入新密码" />
-                </Form.Item>
-                <Form.Item
-                  name="confirmNewPassword"
-                  label="确认新密码"
-                  dependencies={['new_password']}
-                  rules={[
-                    { required: true, message: '请再次输入新密码' },
-                    ({ getFieldValue }) => ({
-                      validator(_, value) {
-                        if (!value || getFieldValue('new_password') === value) {
-                          return Promise.resolve();
-                        }
-                        return Promise.reject(new Error('两次输入的新密码不一致'));
-                      },
-                    }),
-                  ]}
-                >
-                  <Input.Password prefix={<LockOutlined />} placeholder="请再次输入新密码" />
-                </Form.Item>
-                <Button type="default" htmlType="submit" loading={loading} block>
-                  重置密码
+                <Button onClick={sendResetCode} loading={resetCodeSending} disabled={resetCountdown > 0} style={{ height: 44 }}>
+                  {resetCountdown > 0 ? `${resetCountdown}s` : '发送'}
                 </Button>
-              </Form>
-            </Card>
-          </Space>
+              </Space.Compact>
+            </Form.Item>
+            <Form.Item name="new_password" rules={[{ required: true, message: '请输入新密码' }, { min: 6, message: '至少 6 个字符' }]}>
+              <Input.Password prefix={<LockOutlined />} placeholder="新密码" style={inputStyle} />
+            </Form.Item>
+            <Form.Item name="confirmNewPassword" dependencies={['new_password']} rules={[{ required: true, message: '请确认密码' }, { validator: function(_rule: unknown, value: string) { return !value || resetPasswordForm.getFieldValue('new_password') === value ? Promise.resolve() : Promise.reject(new Error('两次密码不一致')); } }]}>
+              <Input.Password prefix={<LockOutlined />} placeholder="确认新密码" style={inputStyle} />
+            </Form.Item>
+            <Button type="primary" htmlType="submit" loading={loading} block className="login-primary-btn">
+              重置密码
+            </Button>
+          </Form>
         </div>
       );
     }
 
     return (
-      <Form
-        form={emailLoginForm}
-        layout="vertical"
-        onFinish={handleEmailLogin}
-        size="large"
-        style={{ marginTop: 16 }}
-      >
-        <Form.Item
-          name="email"
-          label="邮箱地址"
-          rules={[
-            { required: true, message: '请输入邮箱地址' },
-            { type: 'email', message: '请输入有效的邮箱地址' },
-          ]}
-        >
+      <Form form={emailLoginForm} layout="vertical" onFinish={handleEmailLogin} size="large" style={{ marginTop: 8 }}>
+        <Form.Item name="email" rules={[{ required: true, message: '请输入邮箱' }, { type: 'email', message: '邮箱格式不正确' }]}>
           <Input
-            prefix={<MailOutlined style={{ color: token.colorTextTertiary }} />}
-            placeholder="请输入已注册邮箱"
+            prefix={<MailOutlined style={{ color: token.colorTextQuaternary }} />}
+            placeholder="邮箱地址"
             autoComplete="email"
-            style={{ height: 46, borderRadius: 12 }}
+            style={inputStyle}
           />
         </Form.Item>
-
-        <Form.Item label="登录验证码" required style={{ marginBottom: 24 }}>
+        <Form.Item label="验证码" required style={{ marginBottom: 16 }}>
           <Space.Compact style={{ width: '100%' }}>
-            <Form.Item
-              name="code"
-              noStyle
-              rules={[
-                { required: true, message: '请输入登录验证码' },
-                { len: 6, message: '验证码长度为 6 位' },
-              ]}
-            >
+            <Form.Item name="code" noStyle rules={[{ required: true, message: '请输入验证码' }, { len: 6, message: '验证码为 6 位' }]}>
               <Input
-                prefix={<SafetyCertificateOutlined style={{ color: token.colorTextTertiary }} />}
-                placeholder="请输入 6 位登录验证码"
+                prefix={<SafetyCertificateOutlined style={{ color: token.colorTextQuaternary }} />}
+                placeholder="6 位验证码"
                 maxLength={6}
-                style={{ height: 46, borderRadius: '12px 0 0 12px' }}
+                style={{ ...inputStyle, borderRadius: '8px 0 0 8px' }}
               />
             </Form.Item>
-            <Button
-              style={{ height: 46 }}
-              onClick={sendLoginCode}
-              loading={loginCodeSending}
-              disabled={loginCountdown > 0}
-            >
-              {loginCountdown > 0 ? `${loginCountdown}s 后重发` : '发送验证码'}
+            <Button onClick={sendLoginCode} loading={loginCodeSending} disabled={loginCountdown > 0} style={{ height: 44 }}>
+              {loginCountdown > 0 ? `${loginCountdown}s` : '发送'}
             </Button>
           </Space.Compact>
         </Form.Item>
-
-        <Form.Item style={{ marginBottom: 0, marginTop: 8 }}>
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={loading}
-            block
-            style={{
-              height: 46,
-              fontSize: 16,
-              fontWeight: 600,
-              background: `linear-gradient(90deg, ${token.colorPrimary} 0%, ${alphaColor(token.colorPrimary, 0.86)} 100%)`,
-              border: 'none',
-              borderRadius: '12px',
-              boxShadow: primaryButtonShadow,
-            }}
-          >
+        <Form.Item style={{ marginBottom: 0 }}>
+          <Button type="primary" htmlType="submit" loading={loading} block className="login-primary-btn">
             验证码登录
           </Button>
         </Form.Item>
-
         <div style={{ marginTop: 12, textAlign: 'right' }}>
-          <Button type="link" style={{ paddingInline: 0 }} onClick={() => setShowResetPassword(true)}>
-            忘记密码？点击重置
+          <Button type="link" size="small" style={{ padding: 0 }} onClick={() => setShowResetPassword(true)}>
+            忘记密码？
           </Button>
         </div>
       </Form>
@@ -587,471 +387,195 @@ export default function Login() {
   };
 
   const renderEmailRegister = () => (
-    <Form
-      form={emailRegisterForm}
-      layout="vertical"
-      onFinish={handleEmailRegister}
-      size="large"
-      style={{ marginTop: 16 }}
-    >
-      <Form.Item
-        name="email"
-        label="注册邮箱"
-        rules={[
-          { required: true, message: '请输入注册邮箱' },
-          { type: 'email', message: '请输入有效的邮箱地址' },
-        ]}
-      >
-        <Input
-          prefix={<MailOutlined style={{ color: token.colorTextTertiary }} />}
-          placeholder="请输入注册邮箱"
-          autoComplete="email"
-          style={{ height: 46, borderRadius: 12 }}
-        />
+    <Form form={emailRegisterForm} layout="vertical" onFinish={handleEmailRegister} size="large" style={{ marginTop: 8 }}>
+      <Form.Item name="email" rules={[{ required: true, message: '请输入邮箱' }, { type: 'email', message: '邮箱格式不正确' }]}>
+        <Input prefix={<MailOutlined style={{ color: token.colorTextQuaternary }} />} placeholder="邮箱地址" autoComplete="email" style={inputStyle} />
       </Form.Item>
-
-      <Form.Item label="邮箱验证码" required style={{ marginBottom: 12 }}>
+      <Form.Item label="验证码" required style={{ marginBottom: 12 }}>
         <Space.Compact style={{ width: '100%' }}>
-          <Form.Item
-            name="code"
-            noStyle
-            rules={[
-              { required: true, message: '请输入邮箱验证码' },
-              { len: 6, message: '验证码长度为 6 位' },
-            ]}
-          >
-            <Input
-              prefix={<SafetyCertificateOutlined style={{ color: token.colorTextTertiary }} />}
-              placeholder="请输入 6 位验证码"
-              maxLength={6}
-              style={{ height: 46, borderRadius: '12px 0 0 12px' }}
-            />
+          <Form.Item name="code" noStyle rules={[{ required: true, message: '请输入验证码' }, { len: 6, message: '验证码为 6 位' }]}>
+            <Input prefix={<SafetyCertificateOutlined style={{ color: token.colorTextQuaternary }} />} placeholder="6 位验证码" maxLength={6} style={{ ...inputStyle, borderRadius: '8px 0 0 8px' }} />
           </Form.Item>
-          <Button
-            style={{ height: 46 }}
-            onClick={sendRegisterCode}
-            loading={registerCodeSending}
-            disabled={registerCountdown > 0}
-          >
-            {registerCountdown > 0 ? `${registerCountdown}s 后重发` : '发送验证码'}
+          <Button onClick={sendRegisterCode} loading={registerCodeSending} disabled={registerCountdown > 0} style={{ height: 44 }}>
+            {registerCountdown > 0 ? `${registerCountdown}s` : '发送'}
           </Button>
         </Space.Compact>
       </Form.Item>
-
-      <Form.Item
-        name="display_name"
-        label="昵称"
-        rules={[{ max: 50, message: '昵称长度不能超过 50 个字符' }]}
-      >
-        <Input
-          prefix={<UserOutlined style={{ color: token.colorTextTertiary }} />}
-          placeholder="选填，默认使用邮箱前缀"
-          autoComplete="nickname"
-          style={{ height: 46, borderRadius: 12 }}
-        />
+      <Form.Item name="display_name" rules={[{ max: 50, message: '昵称不超过 50 个字符' }]}>
+        <Input prefix={<UserOutlined style={{ color: token.colorTextQuaternary }} />} placeholder="昵称（选填）" autoComplete="nickname" style={inputStyle} />
       </Form.Item>
-
-      <Form.Item
-        name="password"
-        label="登录密码"
-        rules={[
-          { required: true, message: '请输入登录密码' },
-          { min: 6, message: '密码长度至少为 6 个字符' },
-        ]}
-      >
-        <Input.Password
-          prefix={<LockOutlined style={{ color: token.colorTextTertiary }} />}
-          placeholder="请输入登录密码"
-          autoComplete="new-password"
-          style={{ height: 46, borderRadius: 12 }}
-        />
+      <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }, { min: 6, message: '至少 6 个字符' }]}>
+        <Input.Password prefix={<LockOutlined style={{ color: token.colorTextQuaternary }} />} placeholder="设置密码" autoComplete="new-password" style={inputStyle} />
       </Form.Item>
-
-      <Form.Item
-        name="confirmPassword"
-        label="确认密码"
-        dependencies={['password']}
-        rules={[
-          { required: true, message: '请再次输入登录密码' },
-          ({ getFieldValue }) => ({
-            validator(_, value) {
-              if (!value || getFieldValue('password') === value) {
-                return Promise.resolve();
-              }
-              return Promise.reject(new Error('两次输入的密码不一致'));
-            },
-          }),
-        ]}
-      >
-        <Input.Password
-          prefix={<LockOutlined style={{ color: token.colorTextTertiary }} />}
-          placeholder="请再次输入登录密码"
-          autoComplete="new-password"
-          style={{ height: 46, borderRadius: 12 }}
-        />
+      <Form.Item name="confirmPassword" dependencies={['password']} rules={[{ required: true, message: '请确认密码' }, { validator: function(_rule: unknown, value: string) { return !value || emailRegisterForm.getFieldValue('password') === value ? Promise.resolve() : Promise.reject(new Error('两次密码不一致')); } }]}>
+        <Input.Password prefix={<LockOutlined style={{ color: token.colorTextQuaternary }} />} placeholder="确认密码" autoComplete="new-password" style={inputStyle} />
       </Form.Item>
-
-      <Form.Item style={{ marginBottom: 0, marginTop: 8 }}>
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={loading}
-          block
-          style={{
-            height: 46,
-            fontSize: 16,
-            fontWeight: 600,
-            background: `linear-gradient(90deg, ${token.colorPrimary} 0%, ${alphaColor(token.colorPrimary, 0.86)} 100%)`,
-            border: 'none',
-            borderRadius: '12px',
-            boxShadow: primaryButtonShadow,
-          }}
-        >
+      <Form.Item style={{ marginBottom: 0 }}>
+        <Button type="primary" htmlType="submit" loading={loading} block className="login-primary-btn">
           注册并登录
         </Button>
       </Form.Item>
-
-      <Text type="secondary" style={{ marginTop: 12, display: 'block' }}>
-        验证码将发送到你填写的邮箱，若未收到请检查垃圾箱或稍后重试。注册后可通过邮箱验证码登录，也支持邮箱重置密码。
-      </Text>
     </Form>
   );
 
   const renderLinuxDOLogin = () => (
-    <div>
-      <Button
-        type="primary"
-        size="large"
-        icon={(
-          <img
-            src="/favicon.ico"
-            alt="LinuxDO"
-            style={{
-              width: 20,
-              height: 20,
-              marginRight: 8,
-              verticalAlign: 'middle',
-            }}
-          />
-        )}
-        loading={loading}
-        onClick={handleLinuxDOLogin}
-        block
-        style={{
-          height: 46,
-          fontSize: 16,
-          fontWeight: 600,
-          background: `linear-gradient(90deg, ${token.colorPrimary} 0%, ${alphaColor(token.colorPrimary, 0.86)} 100%)`,
-          border: 'none',
-          borderRadius: '12px',
-          boxShadow: primaryButtonShadow,
-          transition: 'all 0.3s ease',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-2px)';
-          e.currentTarget.style.boxShadow = hoverButtonShadow;
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = primaryButtonShadow;
-        }}
-      >
-        使用 LinuxDO OAuth 登录
-      </Button>
-    </div>
+    <Button
+      size="large"
+      loading={loading}
+      onClick={handleLinuxDOLogin}
+      block
+      className="login-oauth-btn"
+      icon={
+        <img src="/favicon.ico" alt="" style={{ width: 18, height: 18, verticalAlign: 'middle' }} />
+      }
+    >
+      LinuxDO 登录
+    </Button>
   );
 
   const authTabs = [
-    ...(localAuthEnabled
-      ? [
-          {
-            key: 'local-login',
-            label: '本地登录',
-            children: renderLocalLogin(),
-          },
-        ]
-      : []),
-    ...(emailAuthEnabled
-      ? [
-          {
-            key: 'email-login',
-            label: '邮箱登录',
-            children: renderEmailLogin(),
-          },
-        ]
-      : []),
-    ...(emailAuthEnabled && emailRegisterEnabled
-      ? [
-          {
-            key: 'email-register',
-            label: '邮箱注册',
-            children: renderEmailRegister(),
-          },
-        ]
-      : []),
+    ...(localAuthEnabled ? [{ key: 'local', label: '账号登录', children: renderLocalLogin() }] : []),
+    ...(emailAuthEnabled ? [{ key: 'email', label: '邮箱登录', children: renderEmailLogin() }] : []),
+    ...(emailAuthEnabled && emailRegisterEnabled ? [{ key: 'register', label: '注册', children: renderEmailRegister() }] : []),
   ];
 
   if (checking) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          background: token.colorBgLayout,
-        }}
-      >
-        <Spin size="large" style={{ color: token.colorPrimary }} />
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: 'var(--mxy-bg-layout)' }}>
+        <Spin size="large" />
       </div>
     );
   }
 
   return (
-    <>
-      <AnnouncementModal
-        visible={showAnnouncement}
-        onClose={handleAnnouncementClose}
-        onDoNotShowToday={handleDoNotShowToday}
-        onNeverShow={handleNeverShow}
-      />
-      <Layout style={{ minHeight: '100vh', background: token.colorBgLayout }}>
-        <div
-          style={{
-            position: 'fixed',
-            top: 20,
-            right: 20,
-            zIndex: 10,
-            padding: '8px 10px',
-            borderRadius: 12,
-            background: alphaColor(token.colorBgContainer, 0.9),
-            border: `1px solid ${token.colorBorderSecondary}`,
-            backdropFilter: 'blur(6px)',
-          }}
-        >
-          <ThemeSwitch size="small" />
+    <div className="login-page">
+      {/* Top bar */}
+      <div className="login-topbar">
+        <div className="login-topbar-brand">
+          <img src="/logo.svg" alt="" className="login-topbar-logo" />
+          <span className="login-topbar-name">墨小语</span>
         </div>
-        <Row style={{ minHeight: '100vh' }}>
-          <Col xs={0} lg={11}>
-            <section
-              style={{
-                height: '100%',
-                padding: '44px 64px 88px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                position: 'relative',
-                overflow: 'hidden',
-                backgroundColor: alphaColor(token.colorBgContainer, 0.78),
-                backgroundImage: `linear-gradient(${alphaColor(token.colorTextSecondary, 0.06)} 1px, transparent 1px), linear-gradient(90deg, ${alphaColor(token.colorTextSecondary, 0.06)} 1px, transparent 1px)`,
-                backgroundSize: '68px 68px',
-              }}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: `radial-gradient(circle at 25% 20%, ${alphaColor(token.colorPrimary, 0.12)} 0%, transparent 50%)`,
-                  pointerEvents: 'none',
-                }}
-              />
+        <ThemeSwitch />
+      </div>
 
-              <div
-                style={{
-                  position: 'relative',
-                  zIndex: 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  gap: 34,
-                  width: '100%',
-                }}
-              >
-                <Space align="center" size={14}>
-                  <div
-                    style={{
-                      width: 46,
-                      height: 46,
-                      borderRadius: 14,
-                      background: `linear-gradient(135deg, ${token.colorPrimary} 0%, ${alphaColor(token.colorPrimary, 0.7)} 100%)`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: primaryButtonShadow,
-                    }}
-                  >
-                    <img
-                      src="/logo.svg"
-                      alt="MuMuAINovel"
-                      style={{ width: 26, height: 26, filter: 'brightness(0) invert(1)' }}
-                    />
-                  </div>
-                  <Title level={3} style={{ margin: 0, color: token.colorText }}>
-                    MuMuAINovel
-                  </Title>
-                </Space>
+      {/* Main two-panel layout */}
+      <div className="login-main">
+        {/* Left: Brand Panel */}
+        <div className="login-brand-panel">
+          <div className="login-brand-bg-dots" />
+          <div className="login-brand-glow-1" />
+          <div className="login-brand-glow-2" />
 
-                <Space direction="vertical" size={32} style={{ width: '100%' }}>
-                  <div style={{ maxWidth: 'min(860px, 100%)' }}>
-                    <Title
-                      level={1}
-                      style={{
-                        marginBottom: 22,
-                        color: token.colorText,
-                        lineHeight: 1.12,
-                        fontWeight: 800,
-                        fontSize: 'clamp(52px, 3vw, 78px)',
-                      }}
-                    >
-                      基于 AI 的
-                      <br />
-                      <span
-                        style={{
-                          backgroundImage: `linear-gradient(90deg, ${token.colorPrimary} 0%, #d946ef 100%)`,
-                          WebkitBackgroundClip: 'text',
-                          backgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                          color: token.colorPrimary,
-                        }}
-                      >
-                        智能小说创作助手
-                      </span>
-                    </Title>
-                    <Paragraph
-                      style={{
-                        fontSize: 'clamp(18px, 1vw, 22px)',
-                        lineHeight: 1.85,
-                        color: token.colorTextSecondary,
-                        marginBottom: 0,
-                        maxWidth: 800,
-                      }}
-                    >
-                      从灵感到成稿，围绕「多模型协同、创作流程自动化、角色关系管理、章节精修」构建一体化创作工作台。
-                    </Paragraph>
-                  </div>
+          <div className="login-brand-content">
+            <div className="login-brand-logo">
+              <img src="/logo.svg" alt="" className="login-brand-logo-icon" />
+              <span className="login-brand-logo-text">墨小语</span>
+            </div>
 
-                  <Row gutter={[20, 20]} style={{ width: '100%', maxWidth: 'min(920px, 100%)' }}>
-                    {featureItems.map((item) => (
-                      <Col span={12} key={item.title}>
-                        <Card
-                          size="small"
-                          bordered={false}
-                          style={{
-                            height: '100%',
-                            minHeight: 120,
-                            borderRadius: 16,
-                            background: alphaColor(token.colorBgContainer, 0.9),
-                          }}
-                          bodyStyle={{ padding: 16 }}
-                        >
-                          <Space direction="vertical" size={8}>
-                            <Space size={10} style={{ color: token.colorPrimary, fontWeight: 700, fontSize: 15 }}>
-                              {item.icon}
-                              <span>{item.title}</span>
-                            </Space>
-                            <Paragraph style={{ marginBottom: 0, color: token.colorTextSecondary, fontSize: 14, lineHeight: 1.65 }}>
-                              {item.description}
-                            </Paragraph>
-                          </Space>
-                        </Card>
-                      </Col>
-                    ))}
-                  </Row>
-                </Space>
+            <h1 className="login-brand-claim">
+              从灵感到成稿，
+              <br />
+              <span className="login-brand-claim-accent">AI 与你并肩创作</span>
+            </h1>
 
-                <Space size={[10, 14]} wrap style={{ maxWidth: 'min(860px, 100%)' }}>
-                  <Tag color="blue">OpenAI</Tag>
-                  <Tag color="geekblue">Gemini</Tag>
-                  <Tag color="purple">Claude</Tag>
-                  <Tag color="cyan">LinuxDO OAuth</Tag>
-                  <Tag color="green">Docker Compose</Tag>
-                  <Tag color="gold">PostgreSQL</Tag>
-                </Space>
-              </div>
+            <p className="login-brand-subtitle">
+              多模型协同、智能大纲、角色管理、章节精修——为网文作者打造的一体化创作工作台。
+            </p>
 
-              <Paragraph
-                style={{
-                  marginBottom: 0,
-                  fontSize: 12,
-                  color: token.colorTextTertiary,
-                  position: 'relative',
-                  zIndex: 1,
-                  letterSpacing: 0.4,
-                }}
-              >
-                © 2026 MuMuAINovel · GPLv3 License
-              </Paragraph>
-            </section>
-          </Col>
-
-          <Col xs={24} lg={13}>
-            <section
-              style={{
-                minHeight: '100vh',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '48px min(7vw, 72px)',
-                background: token.colorBgLayout,
-              }}
-            >
-              <div style={{ width: '100%', maxWidth: 520 }}>
-                <Space direction="vertical" size={4}>
-                  <Title level={2} style={{ marginBottom: 0, fontWeight: 700, color: token.colorText }}>
-                    欢迎回来
-                  </Title>
-                  <Paragraph style={{ marginBottom: 0, color: token.colorTextSecondary }}>
-                    登录 MuMuAINovel，继续你的小说创作项目。
-                  </Paragraph>
-                </Space>
-
-                <div style={{ marginTop: 22 }}>
-                  {authTabs.length > 0 ? (
-                    <Tabs defaultActiveKey={authTabs[0].key} items={authTabs} />
-                  ) : null}
-
-                  {!localAuthEnabled && !linuxdoEnabled && !emailAuthEnabled ? (
-                    <Alert
-                      type="warning"
-                      showIcon
-                      message="当前未启用可用登录方式"
-                      description="请联系管理员在系统配置中启用本地登录、邮箱认证或 LinuxDO OAuth 登录。"
-                    />
-                  ) : null}
-
-                  {emailAuthEnabled && !emailRegisterEnabled ? (
-                    <Alert
-                      type="info"
-                      showIcon
-                      style={{ marginTop: 12, borderRadius: 12 }}
-                      message="邮箱注册暂未开放"
-                      description="当前仅开放邮箱验证码登录与找回密码，如需注册请联系管理员。"
-                    />
-                  ) : null}
-
-                  <Divider style={{ margin: '20px 0 14px' }} />
-                  <Alert
-                    type="info"
-                    showIcon
-                    icon={<SafetyCertificateOutlined />}
-                    style={{ background: alphaColor(token.colorPrimary, 0.06), borderRadius: 12 }}
-                    message="登录说明"
-                    description={(
-                      <ul style={{ margin: 0, paddingLeft: 18 }}>
-                        {loginTips.map((tip) => (
-                          <li key={tip} style={{ marginBottom: 4 }}>
-                            {tip}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  />
+            <div className="login-features">
+              {featureItems.map((item) => (
+                <div key={item.title} className="login-feature-item">
+                  <div className="login-feature-icon">{item.icon}</div>
+                  <div className="login-feature-title">{item.title}</div>
+                  <p className="login-feature-desc">{item.desc}</p>
                 </div>
-              </div>
-            </section>
-          </Col>
-        </Row>
-      </Layout>
-    </>
+              ))}
+            </div>
+          </div>
+
+          <div className="login-brand-decoration">
+            <svg viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
+              <path d="M120 20C100 40 60 80 40 120C35 130 30 140 40 140C50 140 60 135 70 125C90 105 110 65 130 40C135 33 127 13 120 20Z" stroke="white" strokeWidth="2" fill="none" />
+              <path d="M40 120L25 155L45 135" stroke="white" strokeWidth="2" fill="none" />
+              <circle cx="25" cy="155" r="3" fill="white" opacity="0.6" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Right: Auth Panel */}
+        <div className="login-auth-panel">
+          <div style={{ width: '100%', maxWidth: 420 }}>
+            {/* Mobile brand header */}
+            <div className="login-mobile-brand">
+              <Space align="center" size={10} style={{ marginBottom: 12 }}>
+                <img src="/logo.svg" alt="" style={{ width: 32, height: 32 }} />
+                <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--mxy-text-primary)' }}>墨小语</span>
+              </Space>
+            </div>
+
+            <div className="login-card mxy-animate-in">
+              <h2 className="login-card-title">欢迎回来</h2>
+              <p className="login-card-subtitle">登录以继续你的创作</p>
+
+              {authTabs.length > 0 ? (
+                <Tabs
+                  defaultActiveKey={authTabs[0].key}
+                  items={authTabs}
+                  size="large"
+                  style={{ marginBottom: 0 }}
+                />
+              ) : null}
+
+              {!localAuthEnabled && !linuxdoEnabled && !emailAuthEnabled ? (
+                <Alert
+                  type="warning" showIcon
+                  message="未启用登录方式"
+                  description="请联系管理员启用本地登录、邮箱认证或 OAuth 登录。"
+                  style={{ marginTop: 16, borderRadius: 8 }}
+                />
+              ) : null}
+
+              {emailAuthEnabled && !emailRegisterEnabled ? (
+                <Alert
+                  type="info" showIcon
+                  message="邮箱注册暂未开放"
+                  description="如需注册请联系管理员。"
+                  style={{ marginTop: 16, borderRadius: 8 }}
+                />
+              ) : null}
+            </div>
+
+            {/* Collapsible tips */}
+            <Collapse
+              ghost
+              style={{ marginTop: 16 }}
+              items={[{
+                key: 'tips',
+                label: (
+                  <Space size={6}>
+                    <QuestionCircleOutlined style={{ color: 'var(--mxy-text-tertiary)', fontSize: 13 }} />
+                    <Text type="secondary" style={{ fontSize: 13 }}>登录说明</Text>
+                  </Space>
+                ),
+                children: (
+                  <ul style={{ margin: 0, paddingLeft: 18 }}>
+                    {loginTips.map((tip) => (
+                      <li key={tip} style={{ marginBottom: 4, color: 'var(--mxy-text-secondary)', fontSize: 13, lineHeight: 1.7 }}>
+                        {tip}
+                      </li>
+                    ))}
+                  </ul>
+                ),
+              }]}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="login-footer">
+        <span className="login-footer-text">&copy; 2026 墨小语 &middot; AI驱动的专业网文创作平台</span>
+      </div>
+    </div>
   );
 }

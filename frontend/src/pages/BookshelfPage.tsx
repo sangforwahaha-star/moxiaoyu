@@ -148,16 +148,16 @@ export default function BookshelfPage({
         style={{
           marginBottom: isMobile ? 12 : 16,
           borderRadius: isMobile ? 14 : 18,
-          background: `linear-gradient(135deg, ${token.colorPrimary} 0%, ${token.colorPrimaryHover} 100%)`,
-          boxShadow: token.boxShadowSecondary,
-          border: 'none',
+          background: token.colorBgContainer,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04)',
+          border: `1px solid ${alphaColor(token.colorText, 0.06)}`,
           position: 'relative',
           overflow: 'hidden',
         }}
         styles={{ body: { padding: isMobile ? '14px 14px' : '16px 18px' } }}
       >
-        <div style={{ position: 'absolute', top: -44, right: -44, width: 150, height: 150, borderRadius: '50%', background: token.colorWhite, opacity: 0.1, pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: -36, left: '26%', width: 100, height: 100, borderRadius: '50%', background: token.colorWhite, opacity: 0.06, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: -44, right: -44, width: 150, height: 150, borderRadius: '50%', background: alphaColor(token.colorPrimary, 0.06), pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -36, left: '26%', width: 100, height: 100, borderRadius: '50%', background: alphaColor(token.colorPrimary, 0.04), pointerEvents: 'none' }} />
 
         <div
           style={{
@@ -175,22 +175,21 @@ export default function BookshelfPage({
               style={{
                 fontSize: isMobile ? 18 : 22,
                 fontWeight: 700,
-                color: token.colorWhite,
+                color: token.colorText,
                 lineHeight: 1.3,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
-                textShadow: `0 2px 4px ${alphaColor(token.colorText, 0.2)}`,
               }}
             >
-              <BookOutlined style={{ opacity: 0.92 }} />
+              <BookOutlined style={{ color: token.colorPrimary }} />
               我的书架
             </div>
             <div
               style={{
                 marginTop: 4,
                 fontSize: isMobile ? 12 : 13,
-                color: alphaColor(token.colorWhite, 0.9),
+                color: token.colorTextSecondary,
               }}
             >
               点击书本即可进入项目，统一查看进度、字数与状态。
@@ -219,7 +218,7 @@ export default function BookshelfPage({
 
       {showApiTip && projects.length === 0 && (
         <Alert
-          message="欢迎使用 MuMuAINovel"
+          message="欢迎使用墨小语"
           description={
             <div style={{
               display: 'flex',
@@ -255,12 +254,10 @@ export default function BookshelfPage({
       <Spin spinning={loading}>
         <div style={{
           ...bookshelfCardStyles.container,
-          borderRadius: isMobile ? 12 : 16,
-          border: `1px solid ${isDark ? alphaColor(token.colorBorder, 0.42) : alphaColor(token.colorText, 0.06)}`,
-          backgroundColor: isDark ? alphaColor(token.colorBgContainer, 0.42) : alphaColor(token.colorBgContainer, 0.72),
-          backgroundImage: `radial-gradient(${alphaColor(token.colorText, isDark ? 0.16 : 0.08)} 1px, transparent 0)`,
-          backgroundSize: '18px 18px',
-          boxShadow: `inset 0 1px 0 ${alphaColor(token.colorWhite, isDark ? 0.08 : 0.45)}`,
+          borderRadius: isMobile ? 14 : 16,
+          border: `1px solid ${alphaColor(token.colorText, 0.06)}`,
+          backgroundColor: token.colorBgContainer,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04)',
           padding: isMobile ? '12px' : '18px',
           ...(isMobile && {
             gridTemplateColumns: '1fr',

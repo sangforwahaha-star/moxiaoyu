@@ -104,13 +104,13 @@ export default function Sponsor() {
                             color: token.colorWhite
                         }}>
                             <Title level={1} style={{ color: token.colorWhite, marginBottom: '8px', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: 'bold' }}>
-                                赞助 MuMuAINovel
+                                赞助 墨小语
                             </Title>
                             <Text type="secondary" style={{ color: token.colorWhite, fontSize: 'clamp(11px, 2vw, 13px)', letterSpacing: '2px' }}>
-                                SUPPORT MuMuAINovel
+                                SUPPORT 墨小语
                             </Text>
                             <Title level={4} style={{ color: token.colorWhite, marginTop: '8px', marginBottom: '8px' }}>
-                                📚 MuMuAINovel - 基于 AI 的智能小说创作助手
+                                📚 墨小语 - 基于 AI 的智能小说创作助手
                             </Title>
                         </div>
                     </div>
@@ -222,7 +222,7 @@ export default function Sponsor() {
                         marginTop: 'auto'
                     }}>
                         <Title level={4} style={{ marginBottom: '12px', fontSize: 'clamp(16px, 3vw, 20px)' }}>
-                            💖 感谢您对 MuMuAINovel 项目的支持
+                            💖 感谢您对墨小语项目的支持
                         </Title>
                         <Paragraph style={{ fontSize: 'clamp(12px, 2vw, 14px)', color: token.colorTextSecondary, marginBottom: '12px' }}>
                             您的赞助将是我持续更新项目的动力，为大家提供更好的AI小说创作体验!

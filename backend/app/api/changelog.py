@@ -19,10 +19,10 @@ def require_login(request: Request):
         raise HTTPException(status_code=401, detail="需要登录")
     return request.state.user
 
-# GitHub API配置
-GITHUB_API_BASE = "https://api.github.com"
-REPO_OWNER = "xiamuceer-j"
-REPO_NAME = "MuMuAINovel"
+# GitHub API配置（已禁用，不再从外部获取）
+GITHUB_API_BASE = ""
+REPO_OWNER = ""
+REPO_NAME = ""
 
 # 缓存配置
 _cache = {
@@ -78,30 +78,9 @@ def is_cache_valid() -> bool:
 
 
 async def fetch_github_commits(page: int = 1, per_page: int = 30) -> List[dict]:
-    """从GitHub API获取提交历史"""
-    url = f"{GITHUB_API_BASE}/repos/{REPO_OWNER}/{REPO_NAME}/commits"
-    params = {
-        "author": REPO_OWNER,
-        "page": page,
-        "per_page": per_page
-    }
-    
-    headers = {
-        "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "MuMuAINovel-App"
-    }
-    
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(url, params=params, headers=headers)
-            response.raise_for_status()
-            return response.json()
-    except httpx.HTTPError as e:
-        logger.error(f"GitHub API请求失败: {str(e)}")
-        raise HTTPException(
-            status_code=502,
-            detail=f"获取GitHub提交历史失败: {str(e)}"
-        )
+    """从GitHub API获取提交历史（已禁用，返回空列表）"""
+    # 私有化部署，不再从外部GitHub获取更新日志
+    return []
 
 
 @router.get("/changelog", response_model=ChangelogResponse)

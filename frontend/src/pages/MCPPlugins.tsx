@@ -14,8 +14,6 @@ import {
   Spin,
   Empty,
   Alert,
-  Row,
-  Col,
   theme,
 } from 'antd';
 import {
@@ -625,7 +623,7 @@ export default function MCPPluginsPage() {
       {contextHolder}
       <div style={{
         minHeight: '90vh',
-        background: `linear-gradient(180deg, ${token.colorBgLayout} 0%, ${alphaColor(token.colorPrimary, 0.08)} 100%)`,
+        background: token.colorBgLayout,
         padding: isMobile ? '20px 16px 70px' : '24px 24px 70px',
         display: 'flex',
         flexDirection: 'column',
@@ -638,145 +636,95 @@ export default function MCPPluginsPage() {
           display: 'flex',
           flexDirection: 'column',
         }}>
-          {/* 顶部导航卡片 */}
-          <Card
-            variant="borderless"
-            style={{
-              background: `linear-gradient(135deg, ${token.colorPrimary} 0%, ${alphaColor(token.colorPrimary, 0.8)} 50%, ${token.colorPrimaryHover} 100%)`,
-              borderRadius: isMobile ? 16 : 24,
-              boxShadow: `0 12px 40px ${alphaColor(token.colorPrimary, 0.25)}, 0 4px 12px ${alphaColor(token.colorText, 0.08)}`,
-              marginBottom: isMobile ? 20 : 24,
-              border: 'none',
-              position: 'relative',
-              overflow: 'hidden'
-            }}
-          >
-            {/* 装饰性背景元素 */}
-            <div style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: '50%', background: alphaColor(token.colorWhite, 0.08), pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', bottom: -40, left: '30%', width: 120, height: 120, borderRadius: '50%', background: alphaColor(token.colorWhite, 0.05), pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', top: '50%', right: '15%', width: 80, height: 80, borderRadius: '50%', background: alphaColor(token.colorWhite, 0.06), pointerEvents: 'none' }} />
+          {/* 页面标题 */}
+          <div style={{ marginBottom: isMobile ? 16 : 20, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <Title level={4} style={{ margin: 0, color: token.colorText }}>MCP插件管理</Title>
+              <Text style={{ fontSize: 13, color: token.colorTextSecondary }}>扩展AI能力，连接外部工具与服务</Text>
+            </div>
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>添加插件</Button>
+          </div>
 
-            <Row align="middle" justify="space-between" gutter={[16, 16]} style={{ position: 'relative', zIndex: 1 }}>
-              <Col xs={24} sm={12}>
-                <Space direction="vertical" size={4}>
-                  <Space align="center">
-                    <Title level={isMobile ? 3 : 2} style={{ margin: 0, color: token.colorWhite, textShadow: `0 2px 4px ${alphaColor(token.colorText, 0.2)}` }}>
-                      <ToolOutlined style={{ color: alphaColor(token.colorWhite, 0.9), marginRight: 8 }} />
-                      MCP插件管理
-                    </Title>
-                  </Space>
-                  <Text style={{ fontSize: isMobile ? 12 : 14, color: alphaColor(token.colorWhite, 0.85), marginLeft: isMobile ? 40 : 48 }}>
-                    扩展AI能力，连接外部工具与服务
-                  </Text>
-                </Space>
-              </Col>
-              <Col xs={24} sm={12}>
-                <Space size={12} style={{ display: 'flex', justifyContent: isMobile ? 'flex-start' : 'flex-end', width: '100%' }}>
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={handleCreate}
-                    style={{
-                      borderRadius: 12,
-                      background: alphaColor(token.colorWarning, 0.95),
-                      border: `1px solid ${alphaColor(token.colorWhite, 0.3)}`,
-                      boxShadow: `0 4px 16px ${alphaColor(token.colorWarning, 0.4)}`,
-                      color: token.colorWhite,
-                      fontWeight: 600
-                    }}
-                  >
-                    添加插件
-                  </Button>
-                </Space>
-              </Col>
-            </Row>
-
-            <div style={{ marginTop: isMobile ? 16 : 24, display: 'flex', gap: isMobile ? 12 : 16, flexDirection: isMobile ? 'column' : 'row' }}>
-              <Card
-                variant="borderless"
-                style={{
-                  flex: 1,
-                  borderRadius: 12,
-                  background: alphaColor(token.colorBgContainer, 0.9),
-                  border: `1px solid ${alphaColor(token.colorBorder, 0.6)}`,
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: `0 4px 12px ${alphaColor(token.colorText, 0.06)}`
-                }}
-                styles={{ body: { padding: isMobile ? 14 : 20 } }}
-              >
-                <div style={{
-                  display: 'flex',
-                  flexDirection: isMobile ? 'column' : 'row',
-                  justifyContent: 'space-between',
-                  alignItems: isMobile ? 'stretch' : 'center',
-                  gap: isMobile ? 12 : 0
-                }}>
-                  <Space align="start" style={{ flex: 1 }}>
-                    <div style={{
-                      width: isMobile ? 36 : 40,
-                      height: isMobile ? 36 : 40,
-                      borderRadius: '50%',
-                      background: modelSupportStatus === 'supported' ? statusStyles.success.bg : modelSupportStatus === 'unsupported' ? statusStyles.error.bg : statusStyles.info.bg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      border: `1px solid ${modelSupportStatus === 'supported' ? statusStyles.success.border : modelSupportStatus === 'unsupported' ? statusStyles.error.border : statusStyles.info.border}`,
-                      flexShrink: 0
-                    }}>
-                      {modelSupportStatus === 'supported' ? (
-                        <CheckCircleOutlined style={{ fontSize: isMobile ? 18 : 20, color: statusStyles.success.text }} />
-                      ) : modelSupportStatus === 'unsupported' ? (
-                        <CloseCircleOutlined style={{ fontSize: isMobile ? 18 : 20, color: statusStyles.error.text }} />
-                      ) : (
-                        <QuestionCircleOutlined style={{ fontSize: isMobile ? 18 : 20, color: statusStyles.info.text }} />
-                      )}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Text strong style={{ fontSize: isMobile ? 14 : 16, display: 'block', color: token.colorText }}>模型能力检查</Text>
-                      <Text type="secondary" style={{ fontSize: isMobile ? 12 : 13, display: 'block', lineHeight: 1.5 }}>
-                        {modelSupportStatus === 'supported'
-                          ? '当前模型支持 Function Calling，可正常使用 MCP 插件'
-                          : modelSupportStatus === 'unsupported'
-                            ? '当前模型不支持 Function Calling，无法使用 MCP 插件'
-                            : '请先检测模型是否支持 Function Calling 能力'}
-                      </Text>
-                    </div>
-                  </Space>
-                  <Button
-                    type={modelSupportStatus === 'supported' ? 'default' : 'primary'}
-                    icon={<ApiOutlined />}
-                    onClick={handleCheckFunctionCalling}
-                    loading={checkingFunctionCalling}
-                    style={{ borderRadius: 8, width: isMobile ? '100%' : 'auto' }}
-                    size={isMobile ? 'middle' : 'middle'}
-                  >
-                    {modelSupportStatus === 'unknown' ? '开始检测' : '重新检测'}
-                  </Button>
-                </div>
-              </Card>
-
-              <Card
-                variant="borderless"
-                style={{
-                  flex: 1,
-                  borderRadius: 12,
-                  background: alphaColor(token.colorInfoBg, 0.7),
-                  border: `1px solid ${alphaColor(token.colorInfoBorder, 0.8)}`,
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: `0 4px 12px ${alphaColor(token.colorText, 0.06)}`
-                }}
-                styles={{ body: { padding: isMobile ? 14 : 20 } }}
-              >
-                <Space align="start">
-                  <InfoCircleOutlined style={{ fontSize: isMobile ? 18 : 20, color: token.colorPrimary, marginTop: 2, flexShrink: 0 }} />
+          <div style={{ marginBottom: isMobile ? 16 : 20, display: 'flex', gap: isMobile ? 12 : 16, flexDirection: isMobile ? 'column' : 'row' }}>
+            <Card
+              variant="borderless"
+              style={{
+                flex: 1,
+                borderRadius: 12,
+                background: token.colorBgContainer,
+                border: `1px solid ${token.colorBorder}`,
+              }}
+              styles={{ body: { padding: isMobile ? 14 : 20 } }}
+            >
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                justifyContent: 'space-between',
+                alignItems: isMobile ? 'stretch' : 'center',
+                gap: isMobile ? 12 : 0
+              }}>
+                <Space align="start" style={{ flex: 1 }}>
+                  <div style={{
+                    width: isMobile ? 36 : 40,
+                    height: isMobile ? 36 : 40,
+                    borderRadius: '50%',
+                    background: modelSupportStatus === 'supported' ? statusStyles.success.bg : modelSupportStatus === 'unsupported' ? statusStyles.error.bg : statusStyles.info.bg,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    border: `1px solid ${modelSupportStatus === 'supported' ? statusStyles.success.border : modelSupportStatus === 'unsupported' ? statusStyles.error.border : statusStyles.info.border}`,
+                    flexShrink: 0
+                  }}>
+                    {modelSupportStatus === 'supported' ? (
+                      <CheckCircleOutlined style={{ fontSize: isMobile ? 18 : 20, color: statusStyles.success.text }} />
+                    ) : modelSupportStatus === 'unsupported' ? (
+                      <CloseCircleOutlined style={{ fontSize: isMobile ? 18 : 20, color: statusStyles.error.text }} />
+                    ) : (
+                      <QuestionCircleOutlined style={{ fontSize: isMobile ? 18 : 20, color: statusStyles.info.text }} />
+                    )}
+                  </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <Text strong style={{ fontSize: isMobile ? 14 : 16, display: 'block', color: token.colorText, marginBottom: 4 }}>什么是 MCP 插件？</Text>
-                    <Text style={{ fontSize: isMobile ? 12 : 13, display: 'block', color: token.colorTextSecondary, lineHeight: 1.6 }}>
-                      MCP (Model Context Protocol) 协议允许 AI 调用外部工具获取数据。通过添加插件，AI 可以访问搜索引擎、数据库、API 等服务，大幅增强创作能力。
+                    <Text strong style={{ fontSize: isMobile ? 14 : 16, display: 'block', color: token.colorText }}>模型能力检查</Text>
+                    <Text type="secondary" style={{ fontSize: isMobile ? 12 : 13, display: 'block', lineHeight: 1.5 }}>
+                      {modelSupportStatus === 'supported'
+                        ? '当前模型支持 Function Calling，可正常使用 MCP 插件'
+                        : modelSupportStatus === 'unsupported'
+                          ? '当前模型不支持 Function Calling，无法使用 MCP 插件'
+                          : '请先检测模型是否支持 Function Calling 能力'}
                     </Text>
                   </div>
                 </Space>
-              </Card>
-            </div>
-          </Card>
+                <Button
+                  type={modelSupportStatus === 'supported' ? 'default' : 'primary'}
+                  icon={<ApiOutlined />}
+                  onClick={handleCheckFunctionCalling}
+                  loading={checkingFunctionCalling}
+                  style={{ borderRadius: 8, width: isMobile ? '100%' : 'auto' }}
+                >
+                  {modelSupportStatus === 'unknown' ? '开始检测' : '重新检测'}
+                </Button>
+              </div>
+            </Card>
+
+            <Card
+              variant="borderless"
+              style={{
+                flex: 1,
+                borderRadius: 12,
+                background: token.colorInfoBg,
+                border: `1px solid ${token.colorInfoBorder}`,
+              }}
+              styles={{ body: { padding: isMobile ? 14 : 20 } }}
+            >
+              <Space align="start">
+                <InfoCircleOutlined style={{ fontSize: isMobile ? 18 : 20, color: token.colorPrimary, marginTop: 2, flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <Text strong style={{ fontSize: isMobile ? 14 : 16, display: 'block', color: token.colorText, marginBottom: 4 }}>什么是 MCP 插件？</Text>
+                  <Text style={{ fontSize: isMobile ? 12 : 13, display: 'block', color: token.colorTextSecondary, lineHeight: 1.6 }}>
+                    MCP (Model Context Protocol) 协议允许 AI 调用外部工具获取数据。通过添加插件，AI 可以访问搜索引擎、数据库、API 等服务，大幅增强创作能力。
+                  </Text>
+                </div>
+              </Space>
+            </Card>
+          </div>
 
           {/* 主内容区 */}
           <div style={{ flex: 1 }}>

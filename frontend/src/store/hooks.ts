@@ -293,10 +293,12 @@ export function useChapterSync() {
   ) => {
     try {
       // 使用fetch处理流式响应
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/chapters/${chapterId}/generate-stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
         },
         body: JSON.stringify({
           style_id: styleId,
@@ -308,6 +310,17 @@ export function useChapterSync() {
       });
 
       if (!response.ok) {
+        // 处理429订阅次数限制错误
+        if (response.status === 429) {
+          try {
+            const errorData = await response.json();
+            const error = new Error('今日生成次数已用完') as any;
+            error.response = { status: 429, data: errorData.detail || errorData };
+            throw error;
+          } catch {
+            throw new Error('今日生成次数已用完');
+          }
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 

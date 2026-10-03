@@ -68,6 +68,11 @@ def _resolve_provider_defaults(provider: Optional[str]) -> Dict[str, str]:
             "api_key": app_settings.xiaomi_mimo_api_key or "",
             "api_base_url": app_settings.xiaomi_mimo_base_url or "https://token-plan-cn.xiaomimimo.com/v1",
         }
+    if raw_provider == "deepseek":
+        return {
+            "api_key": app_settings.deepseek_api_key or "",
+            "api_base_url": app_settings.deepseek_base_url or "https://api.deepseek.com/v1",
+        }
     if raw_provider == "anthropic":
         return {
             "api_key": app_settings.anthropic_api_key or "",
@@ -101,7 +106,7 @@ def resolve_runtime_ai_config(provider: Optional[str], api_key: Optional[str], a
     """
     raw_provider = _normalize_raw_provider(provider)
     resolved = _apply_provider_defaults(raw_provider, api_key, api_base_url)
-    runtime_provider = "openai" if raw_provider == "xiaomi_mimo" else (normalize_provider(raw_provider) or "openai")
+    runtime_provider = "openai" if raw_provider in ("xiaomi_mimo", "deepseek") else (normalize_provider(raw_provider) or "openai")
     return {
         "raw_provider": raw_provider,
         "api_provider": runtime_provider,
@@ -450,9 +455,9 @@ async def test_system_smtp_settings(
     if not from_email:
         raise HTTPException(status_code=400, detail="请先配置发件人邮箱或 SMTP 用户名")
 
-    subject = "MuMuAINovel SMTP 测试邮件"
+    subject = "墨小语 SMTP 测试邮件"
     text_body = (
-        "这是一封来自 MuMuAINovel 系统设置页面的 SMTP 测试邮件。\n\n"
+        "这是一封来自墨小语系统设置页面的 SMTP 测试邮件。\n\n"
         f"发送时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
         f"SMTP 服务商：{settings.smtp_provider}\n"
         f"SMTP 主机：{settings.smtp_host}:{settings.smtp_port}\n"
@@ -460,7 +465,7 @@ async def test_system_smtp_settings(
     )
     html_body = f"""
     <div style=\"font-family: Arial, sans-serif; line-height: 1.7; color: #1f1f1f;\">
-      <h2 style=\"margin-bottom: 12px;\">MuMuAINovel SMTP 测试邮件</h2>
+      <h2 style=\"margin-bottom: 12px;\">墨小语 SMTP 测试邮件</h2>
       <p>这是一封来自系统设置页面的 SMTP 测试邮件。</p>
       <ul>
         <li><strong>发送时间：</strong>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>

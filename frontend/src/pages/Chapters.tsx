@@ -6,7 +6,7 @@ import { eventBus, EventNames } from '../store/eventBus';
 import { useChapterSync } from '../store/hooks';
 import { generateChapterBackground } from '../services/backgroundTaskService';
 import { projectApi, writingStyleApi, chapterApi } from '../services/api';
-import type { Chapter, ChapterUpdate, ApiError, WritingStyle, AnalysisTask, ExpansionPlanData } from '../types';
+import type { Chapter, ChapterUpdate, WritingStyle, AnalysisTask, ExpansionPlanData } from '../types';
 import type { TextAreaRef } from 'antd/es/input/TextArea';
 import ChapterAnalysis from '../components/ChapterAnalysis';
 import ExpansionPlanEditor from '../components/ExpansionPlanEditor';
@@ -14,6 +14,10 @@ import { SSELoadingOverlay } from '../components/SSELoadingOverlay';
 import ChapterReader from '../components/ChapterReader';
 import PartialRegenerateToolbar from '../components/PartialRegenerateToolbar';
 import PartialRegenerateModal from '../components/PartialRegenerateModal';
+import SubscriptionBadge from '../components/SubscriptionBadge';
+import UsageLimitModal from '../components/UsageLimitModal';
+import { subscriptionApi } from '../services/subscriptionService';
+import type { SubscriptionInfo } from '../services/subscriptionService';
 
 const { TextArea } = Input;
 
@@ -103,6 +107,10 @@ export default function Chapters() {
   const [selectionEndPosition, setSelectionEndPosition] = useState(0);
   const [partialRegenerateModalVisible, setPartialRegenerateModalVisible] = useState(false);
 
+  // 订阅付费墙状态
+  const [usageLimitModalVisible, setUsageLimitModalVisible] = useState(false);
+  const [currentSubscriptionInfo, setCurrentSubscriptionInfo] = useState<SubscriptionInfo | null>(null);
+
   // 单章节生成进度状态
   const [singleChapterProgress, setSingleChapterProgress] = useState(0);
   const [singleChapterProgressMessage, setSingleChapterProgressMessage] = useState('');
@@ -123,6 +131,34 @@ export default function Chapters() {
     estimated_time_minutes?: number;
   } | null>(null);
   const batchPollingIntervalRef = useRef<number | null>(null);
+
+  // 订阅相关函数
+  const checkUsageBeforeGenerate = async (): Promise<boolean> => {
+    try {
+      const result = await subscriptionApi.checkUsage();
+      if (!result.allowed) {
+        const subInfo = await subscriptionApi.getSubscriptionInfo();
+        setCurrentSubscriptionInfo(subInfo);
+        setUsageLimitModalVisible(true);
+        return false;
+      }
+      return true;
+    } catch {
+      return true;
+    }
+  };
+
+  const handleSubscriptionUpgrade = async (level: string) => {
+    try {
+      await subscriptionApi.upgradeSubscription(level, 1);
+      const subInfo = await subscriptionApi.getSubscriptionInfo();
+      setCurrentSubscriptionInfo(subInfo);
+      setUsageLimitModalVisible(false);
+      message.success('升级成功！');
+    } catch {
+      message.error('升级失败，请稍后重试');
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -839,6 +875,10 @@ export default function Chapters() {
   const handleGenerate = async () => {
     if (!editingId) return;
 
+    // 检查订阅次数
+    const canGenerate = await checkUsageBeforeGenerate();
+    if (!canGenerate) return;
+
     try {
       setIsContinuing(true);
       setIsGenerating(true);
@@ -889,8 +929,21 @@ export default function Chapters() {
         startPollingTask(editingId);
       }
     } catch (error) {
-      const apiError = error as ApiError;
-      message.error('AI创作失败：' + (apiError.response?.data?.detail || apiError.message || '未知错误'));
+      const apiError = error as any;
+      // 处理429订阅次数限制错误
+      if (apiError?.response?.status === 429) {
+        try {
+          const subInfo = await subscriptionApi.getSubscriptionInfo();
+          setCurrentSubscriptionInfo(subInfo);
+          setUsageLimitModalVisible(true);
+        } catch {
+          message.error('今日生成次数已用完，请升级订阅');
+        }
+        return;
+      }
+      const detail = apiError?.response?.data?.detail;
+      const errorMsg = typeof detail === 'object' ? (detail?.message || '未知错误') : (detail || apiError?.message || '未知错误');
+      message.error('AI创作失败：' + errorMsg);
     } finally {
       setIsContinuing(false);
       setIsGenerating(false);
@@ -1008,6 +1061,10 @@ export default function Chapters() {
       return;
     }
 
+    // 检查订阅次数
+    const canGenerate = await checkUsageBeforeGenerate();
+    if (!canGenerate) return;
+
     try {
       const generatedChapterId = editingId;
       const generatedProjectId = currentProject?.id;
@@ -1051,6 +1108,16 @@ export default function Chapters() {
           await loadAnalysisTasks(latestChapters);
         },
         async (error) => {
+          if (typeof error === 'string' && error.includes('次数')) {
+            try {
+              const subInfo = await subscriptionApi.getSubscriptionInfo();
+              setCurrentSubscriptionInfo(subInfo);
+              setUsageLimitModalVisible(true);
+            } catch {
+              message.error('今日生成次数已用完，请升级订阅');
+            }
+            return;
+          }
           message.error("后台章节任务失败: " + error);
           const latestChapters = await refreshGeneratedChapter();
           await loadAnalysisTasks(latestChapters);
@@ -2007,6 +2074,7 @@ export default function Chapters() {
           </Tag>
         </div>
         <Space direction={isMobile ? 'vertical' : 'horizontal'} style={{ width: isMobile ? '100%' : 'auto' }}>
+          <SubscriptionBadge compact={isMobile} />
           <Input.Search
             allowClear
             placeholder="搜索章节（序号/标题/大纲）"
@@ -3165,6 +3233,14 @@ export default function Chapters() {
           />
         );
       })()}
+
+      {/* 订阅次数限制弹窗 */}
+      <UsageLimitModal
+        visible={usageLimitModalVisible}
+        subscriptionInfo={currentSubscriptionInfo}
+        onClose={() => setUsageLimitModalVisible(false)}
+        onUpgrade={handleSubscriptionUpgrade}
+      />
     </div>
   );
 }

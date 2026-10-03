@@ -24,7 +24,6 @@ import {
   DownloadOutlined,
   UploadOutlined,
   CheckCircleOutlined,
-  FileSearchOutlined,
   InfoCircleOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
@@ -248,15 +247,13 @@ export default function PromptTemplates() {
   };
 
   const currentTemplates = getCurrentTemplates();
-  const pageBackground = `linear-gradient(180deg, ${token.colorBgLayout} 0%, ${token.colorFillSecondary} 100%)`;
-  const headerBackground = `linear-gradient(135deg, ${token.colorPrimary} 0%, ${token.colorPrimaryHover} 100%)`;
 
   return (
     <>
       {contextHolder}
       <div style={{
       minHeight: '90vh',
-      background: pageBackground,
+      background: token.colorBgLayout,
       padding: isMobile ? '20px 16px 70px' : '24px 24px 70px',
       display: 'flex',
       flexDirection: 'column',
@@ -269,108 +266,46 @@ export default function PromptTemplates() {
         display: 'flex',
         flexDirection: 'column',
       }}>
-        {/* 顶部导航卡片 */}
-        <Card
-          variant="borderless"
+        {/* 页面标题 */}
+        <div style={{ marginBottom: isMobile ? 16 : 20, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <Title level={4} style={{ margin: 0, color: token.colorText }}>提示词模板管理</Title>
+            <Text style={{ fontSize: 13, color: token.colorTextSecondary }}>按账户隔离自定义AI生成提示词</Text>
+          </div>
+          <Space wrap>
+            <Button icon={<DownloadOutlined />} onClick={handleExport} size={isMobile ? 'small' : 'middle'}>导出配置</Button>
+            <Upload accept=".json" showUploadList={false} beforeUpload={handleImport}>
+              <Button icon={<UploadOutlined />} size={isMobile ? 'small' : 'middle'}>导入配置</Button>
+            </Upload>
+          </Space>
+        </div>
+
+        <Alert
+          message={
+            <Space align="center">
+              <InfoCircleOutlined style={{ fontSize: 16, color: token.colorPrimary }} />
+              <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>使用说明</Text>
+            </Space>
+          }
+          description={
+            <div>
+              <Text style={{ fontSize: isMobile ? 12 : 13, display: 'block', marginBottom: 8 }}>
+                • <strong>系统默认模板</strong>（灰色头部）：始终启用，无需手动开关。点击"编辑"后将创建仅当前账户生效的自定义副本。
+              </Text>
+              <Text style={{ fontSize: isMobile ? 12 : 13, display: 'block' }}>
+                • <strong>已自定义模板</strong>（紫色头部）：仅当前账户生效，可通过开关控制启用/禁用，使用 <Text code>{'{variable_name}'}</Text> 格式表示变量占位符。点击"重置"可恢复为系统默认。
+              </Text>
+            </div>
+          }
+          type="info"
+          showIcon={false}
           style={{
-            background: headerBackground,
-            borderRadius: isMobile ? 16 : 24,
-            boxShadow: token.boxShadowSecondary,
-            marginBottom: isMobile ? 20 : 24,
-            border: 'none',
-            position: 'relative',
-            overflow: 'hidden'
+            marginBottom: isMobile ? 16 : 20,
+            borderRadius: 8,
+            background: token.colorInfoBg,
+            border: `1px solid ${token.colorInfoBorder}`
           }}
-        >
-          {/* 装饰性背景元素 */}
-          <div style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: '50%', background: token.colorWhite, opacity: 0.08, pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', bottom: -40, left: '30%', width: 120, height: 120, borderRadius: '50%', background: token.colorWhite, opacity: 0.05, pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', top: '50%', right: '15%', width: 80, height: 80, borderRadius: '50%', background: token.colorWhite, opacity: 0.06, pointerEvents: 'none' }} />
-
-          <Row align="middle" justify="space-between" gutter={[16, 16]} style={{ position: 'relative', zIndex: 1 }}>
-            <Col xs={24} sm={12} md={14}>
-              <Space direction="vertical" size={4}>
-                <Title level={isMobile ? 3 : 2} style={{ margin: 0, color: token.colorWhite, textShadow: `0 2px 4px ${token.colorBgMask}` }}>
-                  <FileSearchOutlined style={{ color: token.colorWhite, opacity: 0.9, marginRight: 8 }} />
-                  提示词模板管理
-                </Title>
-                <Text style={{ fontSize: isMobile ? 12 : 14, color: token.colorTextLightSolid, opacity: 0.85, marginLeft: isMobile ? 40 : 48 }}>
-                  按账户隔离自定义AI生成提示词
-                </Text>
-              </Space>
-            </Col>
-            <Col xs={24} sm={12} md={10}>
-              <Space wrap style={{ justifyContent: isMobile ? 'flex-start' : 'flex-end', width: '100%' }}>
-                <Button
-                  icon={<DownloadOutlined />}
-                  onClick={handleExport}
-                  size={isMobile ? 'small' : 'middle'}
-                  style={{
-                    borderRadius: 12,
-                    background: token.colorWhite,
-                    border: `1px solid ${token.colorWhite}`,
-                    boxShadow: token.boxShadow,
-                    color: token.colorPrimary,
-                    fontWeight: 600,
-                    backdropFilter: 'blur(10px)',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  导出配置
-                </Button>
-                <Upload
-                  accept=".json"
-                  showUploadList={false}
-                  beforeUpload={handleImport}
-                >
-                  <Button
-                    icon={<UploadOutlined />}
-                    size={isMobile ? 'small' : 'middle'}
-                    style={{
-                      borderRadius: 12,
-                      background: token.colorWhite,
-                      border: `1px solid ${token.colorWhite}`,
-                      boxShadow: token.boxShadow,
-                      color: token.colorPrimary,
-                      fontWeight: 600,
-                      backdropFilter: 'blur(10px)',
-                    }}
-                  >
-                    导入配置
-                  </Button>
-                </Upload>
-              </Space>
-            </Col>
-          </Row>
-
-          {/* 使用提示 */}
-          <Alert
-            message={
-              <Space align="center">
-                <InfoCircleOutlined style={{ fontSize: 16, color: token.colorPrimary }} />
-                <Text strong style={{ fontSize: isMobile ? 13 : 14 }}>使用说明</Text>
-              </Space>
-            }
-            description={
-              <div>
-                <Text style={{ fontSize: isMobile ? 12 : 13, display: 'block', marginBottom: 8 }}>
-                  • <strong>系统默认模板</strong>（灰色头部）：始终启用，无需手动开关。点击"编辑"后将创建仅当前账户生效的自定义副本。
-                </Text>
-                <Text style={{ fontSize: isMobile ? 12 : 13, display: 'block' }}>
-                  • <strong>已自定义模板</strong>（紫色头部）：仅当前账户生效，可通过开关控制启用/禁用，使用 <Text code>{'{variable_name}'}</Text> 格式表示变量占位符。点击"重置"可恢复为系统默认。
-                </Text>
-              </div>
-            }
-            type="info"
-            showIcon={false}
-            style={{
-              marginTop: isMobile ? 16 : 24,
-              borderRadius: 12,
-              background: token.colorInfoBg,
-              border: `1px solid ${token.colorInfoBorder}`
-            }}
-          />
-        </Card>
+        />
 
         {/* 主内容区 */}
         <div style={{ flex: 1 }}>

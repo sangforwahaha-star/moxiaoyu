@@ -61,8 +61,7 @@ export default function SettingsPage() {
   const [presetModelsFetched, setPresetModelsFetched] = useState(false);
   const [presetModelSearchText, setPresetModelSearchText] = useState('');
 
-  const pageBackground = `linear-gradient(180deg, ${token.colorBgLayout} 0%, ${token.colorFillSecondary} 100%)`;
-  const headerBackground = `linear-gradient(135deg, ${token.colorPrimary} 0%, ${token.colorPrimaryHover} 100%)`;
+  const pageBackground = token.colorBgLayout;
 
   useEffect(() => {
     loadSettings();
@@ -290,32 +289,20 @@ export default function SettingsPage() {
     });
   };
 
-  const mumuTextDefaultUrl = 'https://zhongzhuan.mumuverse.space/v1';
-  const mumuRegisterUrl = 'https://zhongzhuan.mumuverse.space/register?aff=gt7d';
   const xiaomiMimoDefaultUrl = 'https://token-plan-cn.xiaomimimo.com/v1';
   const builtInKeyProviders = ['xiaomi_mimo'];
   const xiaomiMimoDefaultModels = [
     { value: 'mimo-v2.5', label: 'mimo-v2.5', description: 'Xiaomi MiMo 官方内置推荐模型' },
   ];
-  const mumuCoverBaseUrlOptions = [
-    { value: 'https://zhongzhuan.mumuverse.space/v1beta', label: 'https://zhongzhuan.mumuverse.space/v1beta', defaultModel: 'gemini-3.1-flash-image-preview' },
-    { value: 'https://zhongzhuan.mumuverse.space/v1', label: 'https://zhongzhuan.mumuverse.space/v1', defaultModel: 'gpt-image-2' },
-  ];
   const defaultCoverSettings = {
     cover_enabled: false,
-    cover_api_provider: 'mumu',
+    cover_api_provider: 'gemini',
     cover_api_key: '',
-    cover_api_base_url: mumuCoverBaseUrlOptions[0].value,
-    cover_image_model: mumuCoverBaseUrlOptions[0].defaultModel,
+    cover_api_base_url: 'https://generativelanguage.googleapis.com/v1beta',
+    cover_image_model: 'gemini-2.0-flash-exp-image-generation',
   };
 
   const apiProviders = [
-    {
-      value: 'mumu',
-      label: 'MuMuのAPI',
-      defaultUrl: mumuTextDefaultUrl,
-      defaultModel: 'gemini-3-flash-preview'
-    },
     {
       value: 'xiaomi_mimo',
       label: 'Xiaomi MiMo（内置）',
@@ -323,8 +310,8 @@ export default function SettingsPage() {
       defaultModel: xiaomiMimoDefaultModels[0].value,
       builtInKey: true,
     },
+    { value: 'deepseek', label: 'DeepSeek', defaultUrl: 'https://api.deepseek.com/v1', defaultModel: 'deepseek-chat' },
     { value: 'openai', label: 'OpenAI Compatible', defaultUrl: 'https://api.openai.com/v1' },
-    // { value: 'anthropic', label: 'Anthropic (Claude)', defaultUrl: 'https://api.anthropic.com' },
     { value: 'gemini', label: 'Google Gemini', defaultUrl: 'https://generativelanguage.googleapis.com/v1beta' },
   ];
 
@@ -339,10 +326,6 @@ export default function SettingsPage() {
       if (provider.defaultUrl) {
         nextValues.api_base_url = provider.defaultUrl;
       }
-      if (provider.value === 'mumu') {
-        nextValues.api_key = '';
-        nextValues.llm_model = provider.defaultModel || 'gemini-3-flash-preview';
-      }
       if (builtInKeyProviders.includes(provider.value)) {
         nextValues.api_key = '';
         nextValues.llm_model = provider.defaultModel || xiaomiMimoDefaultModels[0].value;
@@ -355,12 +338,6 @@ export default function SettingsPage() {
   };
 
   const coverApiProviders = [
-    {
-      value: 'mumu',
-      label: 'MuMuのAPI',
-      defaultUrl: mumuCoverBaseUrlOptions[0].value,
-      defaultModel: mumuCoverBaseUrlOptions[0].defaultModel,
-    },
     { value: 'gemini', label: 'Google Gemini', defaultUrl: 'https://generativelanguage.googleapis.com/v1beta' },
     { value: 'grok', label: 'Grok', defaultUrl: 'https://api.x.ai/v1' },
   ];
@@ -376,21 +353,8 @@ export default function SettingsPage() {
     if (provider.defaultUrl) {
       nextValues.cover_api_base_url = provider.defaultUrl;
     }
-    if (provider.value === 'mumu') {
-      nextValues.cover_api_key = '';
-      nextValues.cover_image_model = provider.defaultModel || mumuCoverBaseUrlOptions[0].defaultModel;
-    }
 
     form.setFieldsValue(nextValues);
-    setCoverTestResult(null);
-  };
-
-  const handleMumuCoverBaseUrlChange = (value: string) => {
-    const option = mumuCoverBaseUrlOptions.find(item => item.value === value);
-    form.setFieldsValue({
-      cover_api_base_url: value,
-      cover_image_model: option?.defaultModel || mumuCoverBaseUrlOptions[0].defaultModel,
-    });
     setCoverTestResult(null);
   };
 
@@ -638,10 +602,6 @@ export default function SettingsPage() {
       const nextValues: Record<string, string> = {};
       if (provider.defaultUrl) {
         nextValues.api_base_url = provider.defaultUrl;
-      }
-      if (provider.value === 'mumu') {
-        nextValues.api_key = '';
-        nextValues.llm_model = provider.defaultModel || 'gemini-3-flash-preview';
       }
       if (builtInKeyProviders.includes(provider.value)) {
         nextValues.api_key = '';
@@ -952,12 +912,8 @@ export default function SettingsPage() {
     switch (provider) {
       case 'openai':
         return 'blue';
-      // case 'anthropic':
-      //   return 'purple';
       case 'gemini':
         return 'green';
-      case 'mumu':
-        return 'magenta';
       default:
         return 'default';
     }
@@ -1141,40 +1097,15 @@ export default function SettingsPage() {
           display: 'flex',
           flexDirection: 'column',
         }}>
-          {/* 顶部导航卡片 */}
-          <Card
-            variant="borderless"
-            style={{
-              background: headerBackground,
-              borderRadius: isMobile ? 16 : 24,
-              boxShadow: token.boxShadowSecondary,
-              marginBottom: isMobile ? 20 : 24,
-              border: 'none',
-              position: 'relative',
-              overflow: 'hidden'
-            }}
-          >
-            {/* 装饰性背景元素 */}
-            <div style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: '50%', background: token.colorWhite, opacity: 0.08, pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', bottom: -40, left: '30%', width: 120, height: 120, borderRadius: '50%', background: token.colorWhite, opacity: 0.05, pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', top: '50%', right: '15%', width: 80, height: 80, borderRadius: '50%', background: token.colorWhite, opacity: 0.06, pointerEvents: 'none' }} />
-
-            <Row align="middle" justify="space-between" gutter={[16, 16]} style={{ position: 'relative', zIndex: 1 }}>
-              <Col xs={24} sm={12}>
-                <Space direction="vertical" size={4}>
-                  <Title level={isMobile ? 3 : 2} style={{ margin: 0, color: token.colorWhite, textShadow: `0 2px 4px ${token.colorBgMask}` }}>
-                    AI API 设置
-                  </Title>
-                  <Text style={{ fontSize: isMobile ? 12 : 14, color: token.colorTextLightSolid, marginLeft: isMobile ? 40 : 48, opacity: 0.85 }}>
-                    配置AI接口参数，管理多个API配置预设
-                  </Text>
-                </Space>
-              </Col>
-              <Col xs={24} sm={12}>
-                {/* 按钮区域预留 */}
-              </Col>
-            </Row>
-          </Card>
+          {/* 页面标题 */}
+          <div style={{ marginBottom: isMobile ? 16 : 20 }}>
+            <Title level={4} style={{ margin: 0, color: token.colorText }}>
+              AI API 设置
+            </Title>
+            <Text style={{ fontSize: 13, color: token.colorTextSecondary }}>
+              配置AI接口参数，管理多个API配置预设
+            </Text>
+          </div>
 
           {/* 主内容卡片 */}
           <Card
@@ -1260,30 +1191,6 @@ export default function SettingsPage() {
                               ))}
                             </Select>
                           </Form.Item>
-
-                          {selectedProvider === 'mumu' && (
-                            <Alert
-                              type="info"
-                              showIcon
-                              message="MuMuのAPI 专属供应商"
-                              description={
-                                <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                                  <Text>
-                                    已自动填入专属地址，API Key 保持留空。免费注册后即可获取可用 Key。
-                                  </Text>
-                                  <div>
-                                    <Button
-                                      type="primary"
-                                      onClick={() => window.open(mumuRegisterUrl, '_blank', 'noopener,noreferrer')}
-                                    >
-                                      打开 MuMuのAPI 站点免费注册
-                                    </Button>
-                                  </div>
-                                </Space>
-                              }
-                              style={{ marginBottom: 16 }}
-                            />
-                          )}
 
                           {selectedProvider === 'xiaomi_mimo' && (
                             <Alert
@@ -1805,55 +1712,18 @@ export default function SettingsPage() {
                           </Select>
                         </Form.Item>
 
-                        {selectedCoverProvider === 'mumu' && (
-                          <Alert
-                            type="info"
-                            showIcon
-                            message="MuMuのAPI 专属适配器"
-                            description={
-                              <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                                <Text>
-                                  已固定提供 MuMuのAPI 图片接口地址选项，切换地址时会自动带出推荐模型。API Key 需前往 MuMuのAPI 站点注册获取。
-                                </Text>
-                                <div>
-                                  <Button
-                                    type="primary"
-                                    onClick={() => window.open(mumuRegisterUrl, '_blank', 'noopener,noreferrer')}
-                                  >
-                                    打开 MuMuのAPI 站点免费注册
-                                  </Button>
-                                </div>
-                              </Space>
-                            }
-                            style={{ marginBottom: 16 }}
-                          />
-                        )}
-
                         <Form.Item label="封面图片 API Key" name="cover_api_key" rules={[{ required: true, message: '请输入封面图片 API Key' }]}>
-                          <Input.Password size={isMobile ? 'middle' : 'large'} placeholder={selectedCoverProvider === 'mumu' ? '请输入 MuMuのAPI Key' : '输入封面图片 API Key'} autoComplete="new-password" />
+                          <Input.Password size={isMobile ? 'middle' : 'large'} placeholder="输入封面图片 API Key" autoComplete="new-password" />
                         </Form.Item>
 
                         <Form.Item label="封面图片 API 地址" name="cover_api_base_url" rules={[{ type: 'url', message: '请输入有效的URL' }]}>
-                          {selectedCoverProvider === 'mumu' ? (
-                            <Select
-                              size={isMobile ? 'middle' : 'large'}
-                              onChange={handleMumuCoverBaseUrlChange}
-                              options={mumuCoverBaseUrlOptions.map(option => ({
-                                value: option.value,
-                                label: option.label,
-                              }))}
-                            />
-                          ) : (
-                            <Input size={isMobile ? 'middle' : 'large'} placeholder={selectedCoverProvider === 'grok' ? 'https://api.x.ai/v1' : 'https://generativelanguage.googleapis.com/v1beta'} />
-                          )}
+                          <Input size={isMobile ? 'middle' : 'large'} placeholder={selectedCoverProvider === 'grok' ? 'https://api.x.ai/v1' : 'https://generativelanguage.googleapis.com/v1beta'} />
                         </Form.Item>
 
                         <Form.Item label="封面图片模型" name="cover_image_model" rules={[{ required: true, message: '请输入封面图片模型名称' }]}>
                           <Input
                             size={isMobile ? 'middle' : 'large'}
-                            placeholder={selectedCoverProvider === 'mumu'
-                              ? '选择地址后自动填入推荐模型'
-                              : selectedCoverProvider === 'grok'
+                            placeholder={selectedCoverProvider === 'grok'
                                 ? 'grok-2-image'
                                 : 'gemini-2.0-flash-exp-image-generation'}
                           />
@@ -1943,36 +1813,12 @@ export default function SettingsPage() {
                   style={{ marginBottom: 16 }}
                 >
                   <Select placeholder="选择提供商" onChange={handlePresetProviderChange}>
-                    <Select.Option value="mumu">MuMuのAPI</Select.Option>
                     <Select.Option value="xiaomi_mimo">Xiaomi MiMo（内置）</Select.Option>
+                    <Select.Option value="deepseek">DeepSeek</Select.Option>
                     <Select.Option value="openai">OpenAI</Select.Option>
                     <Select.Option value="gemini">Google Gemini</Select.Option>
                   </Select>
                 </Form.Item>
-
-                {selectedPresetProvider === 'mumu' && (
-                  <Alert
-                    type="info"
-                    showIcon
-                    message="MuMuのAPI 专属供应商"
-                    description={
-                      <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                        <Text>
-                          已自动填入专属地址，API Key 保持留空。免费注册后即可获取可用 Key。
-                        </Text>
-                        <div>
-                          <Button
-                            type="primary"
-                            onClick={() => window.open(mumuRegisterUrl, '_blank', 'noopener,noreferrer')}
-                          >
-                            打开 MuMuのAPI 站点免费注册
-                          </Button>
-                        </div>
-                      </Space>
-                    }
-                    style={{ marginBottom: 16 }}
-                  />
-                )}
 
                 {selectedPresetProvider === 'xiaomi_mimo' && (
                   <Alert

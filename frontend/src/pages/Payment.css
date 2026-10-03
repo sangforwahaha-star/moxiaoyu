@@ -1,0 +1,341 @@
+.payment-page {
+  min-height: 100vh;
+  background: var(--mxy-bg-layout);
+  color: var(--mxy-text-primary);
+}
+
+/* Nav */
+.payment-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--mxy-border);
+}
+
+[data-theme-resolved='light'] .payment-nav {
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.payment-nav-inner {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+}
+
+.payment-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.payment-nav-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--mxy-text-primary);
+  font-family: var(--mxy-font-serif);
+}
+
+.payment-nav-back {
+  color: var(--mxy-text-secondary) !important;
+  font-size: 14px !important;
+}
+
+.payment-nav-back:hover {
+  color: var(--mxy-primary) !important;
+}
+
+/* Loading */
+.payment-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 60vh;
+}
+
+/* Content */
+.payment-content {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+/* Card */
+.payment-card {
+  background: var(--mxy-bg-container);
+  border: 1px solid var(--mxy-border);
+  border-radius: var(--mxy-radius-xl);
+  padding: 32px;
+}
+
+.payment-card-success {
+  text-align: center;
+}
+
+.payment-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.payment-secure-icon {
+  font-size: 22px;
+  color: var(--mxy-success);
+}
+
+.payment-paying-icon {
+  font-size: 22px;
+  color: var(--mxy-primary);
+}
+
+.payment-card-title {
+  margin: 0 !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: var(--mxy-text-primary) !important;
+}
+
+/* Order summary */
+.payment-order-summary {
+  background: var(--mxy-bg-base);
+  border: 1px solid var(--mxy-border-light);
+  border-radius: var(--mxy-radius-lg);
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.payment-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.payment-summary-row:not(:last-child) {
+  border-bottom: 1px solid var(--mxy-border-light);
+}
+
+.payment-summary-total {
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.payment-summary-label {
+  font-size: 14px;
+  color: var(--mxy-text-secondary);
+}
+
+.payment-summary-value {
+  font-size: 14px;
+  color: var(--mxy-text-primary);
+  font-weight: 500;
+}
+
+.payment-summary-price {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.payment-price-symbol {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--mxy-primary);
+}
+
+.payment-price-amount {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--mxy-primary);
+  line-height: 1;
+}
+
+/* Payment methods */
+.payment-methods {
+  margin-bottom: 24px;
+}
+
+.payment-methods-title {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mxy-text-primary);
+  margin-bottom: 12px;
+}
+
+.payment-method-options {
+  display: flex;
+  gap: 12px;
+}
+
+.payment-method-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--mxy-border);
+  border-radius: var(--mxy-radius-md);
+  cursor: pointer;
+  transition: all var(--mxy-transition-fast);
+  position: relative;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mxy-text-primary);
+}
+
+.payment-method-option:hover {
+  border-color: var(--mxy-primary);
+}
+
+.payment-method-option.active {
+  border-color: var(--mxy-primary);
+  background: var(--mxy-primary-bg);
+}
+
+.payment-method-icon {
+  font-size: 24px;
+}
+
+.payment-method-icon.alipay {
+  color: #1677ff;
+}
+
+.payment-method-icon.wechat {
+  color: #07c160;
+}
+
+.payment-method-check {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--mxy-primary);
+  font-size: 16px;
+}
+
+/* Pay button */
+.payment-pay-btn {
+  height: 48px !important;
+  border-radius: var(--mxy-radius-md) !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  background: var(--mxy-gradient) !important;
+  border: none !important;
+  box-shadow: var(--mxy-shadow-primary) !important;
+}
+
+.payment-pay-btn:hover {
+  background: var(--mxy-gradient-hover) !important;
+  box-shadow: 0 6px 20px rgba(22, 93, 255, 0.35) !important;
+  transform: translateY(-1px) !important;
+}
+
+.payment-disclaimer {
+  display: block;
+  text-align: center;
+  margin-top: 16px;
+  font-size: 12px;
+}
+
+/* QR / Paying area */
+.payment-qr-area {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.payment-qr-placeholder {
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 20px;
+  border-radius: var(--mxy-radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 2px dashed var(--mxy-border);
+}
+
+.payment-qr-placeholder.alipay {
+  border-color: #1677ff;
+  background: rgba(22, 119, 255, 0.04);
+}
+
+.payment-qr-placeholder.wechat {
+  border-color: #07c160;
+  background: rgba(7, 193, 96, 0.04);
+}
+
+.payment-qr-icon {
+  font-size: 48px;
+}
+
+.payment-qr-placeholder.alipay .payment-qr-icon {
+  color: #1677ff;
+}
+
+.payment-qr-placeholder.wechat .payment-qr-icon {
+  color: #07c160;
+}
+
+.payment-qr-text {
+  font-size: 13px;
+  color: var(--mxy-text-secondary);
+}
+
+.payment-qr-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.payment-paying-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.payment-simulate-btn {
+  height: 44px !important;
+  border-radius: var(--mxy-radius-md) !important;
+  font-weight: 600 !important;
+}
+
+/* Success details */
+.payment-success-details {
+  background: var(--mxy-bg-base);
+  border: 1px solid var(--mxy-border-light);
+  border-radius: var(--mxy-radius-lg);
+  padding: 16px 20px;
+  margin-top: 20px;
+  text-align: left;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .payment-content {
+    padding: 24px 16px 60px;
+  }
+
+  .payment-card {
+    padding: 24px 20px;
+  }
+
+  .payment-method-options {
+    flex-direction: column;
+  }
+
+  .payment-price-amount {
+    font-size: 24px;
+  }
+}

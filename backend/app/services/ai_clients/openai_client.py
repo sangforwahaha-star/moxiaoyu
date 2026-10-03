@@ -145,12 +145,13 @@ class OpenAIClient(BaseAIClient):
         content, reasoning = split_content_and_reasoning(message)
         content = strip_think_tags(content)
         if not content and reasoning:
-            logger.warning(
-                "非流式响应正文为空，已丢弃推理内容以免污染 JSON: model=%s reasoning_chars=%s finish_reason=%s",
+            logger.info(
+                "非流式响应正文为空，使用推理内容作为回复: model=%s reasoning_chars=%s finish_reason=%s",
                 model,
                 len(reasoning),
                 choice.get("finish_reason"),
             )
+            content = reasoning
         return {
             "content": content,
             "tool_calls": message.get("tool_calls"),

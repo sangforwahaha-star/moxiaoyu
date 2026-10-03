@@ -592,95 +592,45 @@ export default function BookImport() {
       style={{
         minHeight: '90vh',
         overflow: 'auto',
-        background: `linear-gradient(180deg, ${token.colorBgLayout} 0%, ${token.colorFillSecondary} 100%)`,
+        background: token.colorBgLayout,
         padding: isMobile ? '20px 16px 70px' : '24px 24px 70px',
       }}
     >
       <div style={{ maxWidth: 1400, margin: '0 auto', width: '100%' }}>
+        {/* 页面标题 */}
+        <div style={{ marginBottom: isMobile ? 14 : 16, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <Title level={4} style={{ margin: 0, color: token.colorText }}>拆书导入</Title>
+            <Text style={{ fontSize: 13, color: token.colorTextSecondary }}>上传TXT并自动解析为章节、预览并导入项目</Text>
+          </div>
+          <Space size={12}>
+            <Tag style={{ marginInlineEnd: 0, borderRadius: 8, paddingInline: 10, fontWeight: 600 }}>
+              当前进度：{currentStepText}
+            </Tag>
+            <Popconfirm
+              title="确认重新开始？"
+              description="将清空当前拆书任务与缓存，并回到上传文件步骤。"
+              onConfirm={restartImport}
+              okText="重新开始"
+              cancelText="取消"
+              disabled={!canRestart}
+            >
+              <Button danger type="primary" icon={<ReloadOutlined />} disabled={!canRestart}>重新开始</Button>
+            </Popconfirm>
+          </Space>
+        </div>
+
         <Card
           variant="borderless"
           style={{
-            background: `linear-gradient(135deg, ${token.colorPrimary} 0%, ${token.colorPrimaryHover} 100%)`,
-            borderRadius: isMobile ? 16 : 20,
-            boxShadow: token.boxShadowSecondary,
             marginBottom: isMobile ? 14 : 16,
-            border: 'none',
-            position: 'relative',
-            overflow: 'hidden',
+            borderRadius: 12,
+            background: token.colorBgContainer,
+            border: `1px solid ${token.colorBorder}`,
           }}
+          styles={{ body: { padding: isMobile ? '10px 12px' : '12px 16px' } }}
         >
-          <div style={{ position: 'absolute', top: -48, right: -48, width: 160, height: 160, borderRadius: '50%', background: token.colorWhite, opacity: 0.08, pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', bottom: -40, left: '26%', width: 110, height: 110, borderRadius: '50%', background: token.colorWhite, opacity: 0.05, pointerEvents: 'none' }} />
-
-          <Row align="middle" justify="space-between" gutter={[16, 16]} style={{ position: 'relative', zIndex: 1 }}>
-            <Col xs={24} sm={12}>
-              <Space direction="vertical" size={4}>
-                <Title level={isMobile ? 3 : 2} style={{ margin: 0, color: token.colorWhite, textShadow: `0 2px 4px ${token.colorBgMask}` }}>
-                  <InboxOutlined style={{ color: token.colorWhite, opacity: 0.9, marginRight: 8 }} />
-                  拆书导入
-                </Title>
-                <Text style={{ fontSize: isMobile ? 12 : 14, color: token.colorTextLightSolid, opacity: 0.85, marginLeft: isMobile ? 40 : 48 }}>
-                  上传TXT并自动解析为章节、预览并导入项目
-                </Text>
-              </Space>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Space
-                size={12}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  justifyContent: isMobile ? 'flex-start' : 'flex-end',
-                }}
-              >
-                <Tag
-                  style={{
-                    marginInlineEnd: 0,
-                    background: token.colorWhite,
-                    border: `1px solid ${token.colorWhite}`,
-                    color: token.colorPrimary,
-                    fontWeight: 600,
-                    borderRadius: 8,
-                    paddingInline: 10,
-                  }}
-                >
-                  当前进度：{currentStepText}
-                </Tag>
-                <Popconfirm
-                  title="确认重新开始？"
-                  description="将清空当前拆书任务与缓存，并回到上传文件步骤。"
-                  onConfirm={restartImport}
-                  okText="重新开始"
-                  cancelText="取消"
-                  disabled={!canRestart}
-                >
-                  <Button
-                    danger
-                    type="primary"
-                    icon={<ReloadOutlined />}
-                    disabled={!canRestart}
-                    style={{ boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2)', borderRadius: 10 }}
-                  >
-                    重新开始
-                  </Button>
-                </Popconfirm>
-              </Space>
-            </Col>
-          </Row>
-
-          <Card
-            variant="borderless"
-            style={{
-              marginTop: isMobile ? 14 : 18,
-              borderRadius: 12,
-              background: token.colorBgContainer,
-              border: `1px solid ${token.colorBorderSecondary}`,
-              boxShadow: token.boxShadow,
-            }}
-            styles={{ body: { padding: isMobile ? '10px 12px' : '12px 16px' } }}
-          >
-            <Steps current={currentStep} size={isMobile ? 'small' : 'default'} items={stepItems} />
-          </Card>
+          <Steps current={currentStep} size={isMobile ? 'small' : 'default'} items={stepItems} />
         </Card>
 
       {currentStep === 0 && (

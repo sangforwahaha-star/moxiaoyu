@@ -65,7 +65,7 @@ def _default_download_dir() -> Path:
     if getattr(sys, "frozen", False):
         local_app_data = os.getenv("LOCALAPPDATA")
         cache_root = Path(local_app_data) if local_app_data else Path.home() / ".cache"
-        return cache_root / "MuMuAINovel" / "embedding-onnx" / MODEL_NAME
+        return cache_root / "moxiaoyu" / "embedding-onnx" / MODEL_NAME
 
     backend_dir = Path(__file__).resolve().parents[2]
     return backend_dir / "embedding" / "onnx" / MODEL_NAME
@@ -121,7 +121,7 @@ def _download_file(filename: str, target_dir: Path) -> None:
             ):
                 return
             resume_at = partial.stat().st_size if partial.exists() else 0
-            headers = {"User-Agent": "MuMuAINovel/ONNX-model-downloader"}
+            headers = {"User-Agent": "WebNovelAssistant/ONNX-model-downloader"}
             if resume_at:
                 headers["Range"] = f"bytes={resume_at}-"
 

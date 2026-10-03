@@ -2,12 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 import { Alert, Button, Card, Col, DatePicker, Form, Input, InputNumber, Modal, Popconfirm, Row, Select, Space, Spin, Switch, Table, Tag, Tabs, Typography, message, theme } from 'antd';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
-import { BellOutlined, CheckCircleOutlined, DeleteOutlined, EditOutlined, EyeInvisibleOutlined, MailOutlined, PlusOutlined, ReloadOutlined, SaveOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons';
+import { BellOutlined, CheckCircleOutlined, DeleteOutlined, EditOutlined, EyeInvisibleOutlined, MailOutlined, PlusOutlined, ReloadOutlined, SaveOutlined, SendOutlined } from '@ant-design/icons';
 import { announcementApi, authApi, settingsApi } from '../services/api';
 import type { Announcement, AnnouncementCreate, AnnouncementLevel, AnnouncementStatus, AnnouncementStatusResponse, AnnouncementUpdate, SystemSMTPSettings, SystemSMTPSettingsUpdate, User } from '../types';
 import MarkdownRenderer from '../components/MarkdownRenderer';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 const { TextArea, Search } = Input;
 
@@ -95,8 +95,6 @@ export default function SystemSettingsPage() {
 
   const announcementContent = Form.useWatch('content', announcementForm) || '';
 
-  const pageBackground = `linear-gradient(180deg, ${token.colorBgLayout} 0%, ${token.colorFillSecondary} 100%)`;
-  const headerBackground = `linear-gradient(135deg, ${token.colorPrimary} 0%, ${token.colorPrimaryHover} 100%)`;
   const footerSafeOffset = 88;
   const announcementAdminAvailable = announcementStatus?.mode === 'server';
 
@@ -502,34 +500,18 @@ export default function SystemSettingsPage() {
       style={{
         minHeight: `calc(100vh - ${footerSafeOffset}px)`,
         boxSizing: 'border-box',
-        background: pageBackground,
+        background: token.colorBgLayout,
         padding: 24,
         paddingBottom: footerSafeOffset,
       }}
     >
       <div style={{ maxWidth: 1400, margin: '0 auto', width: '100%' }}>
-      <Card
-        bordered={false}
-        style={{
-          marginBottom: 24,
-          borderRadius: 20,
-          overflow: 'hidden',
-          boxShadow: `0 12px 32px ${token.colorFillSecondary}`,
-        }}
-        bodyStyle={{ padding: 0 }}
-      >
-        <div style={{ background: headerBackground, padding: '28px 32px', color: '#fff' }}>
-          <Space direction="vertical" size={6}>
-            <Space>
-              <SettingOutlined />
-              <Title level={3} style={{ color: '#fff', margin: 0 }}>系统设置</Title>
-            </Space>
-            <Paragraph style={{ color: 'rgba(255,255,255,0.88)', margin: 0 }}>
-              仅管理员可见，用于维护 SMTP 发信能力、邮箱注册参数与服务端公告发布。
-            </Paragraph>
-          </Space>
-        </div>
-      </Card>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={4} style={{ margin: 0, color: token.colorText }}>系统设置</Title>
+        <Text style={{ fontSize: 13, color: token.colorTextSecondary }}>
+          仅管理员可见，用于维护 SMTP 发信能力、邮箱注册参数与服务端公告发布。
+        </Text>
+      </div>
 
       <Tabs
         defaultActiveKey="smtp"
@@ -591,7 +573,7 @@ export default function SystemSettingsPage() {
                         </Col>
                         <Col xs={24} md={12}>
                           <Form.Item name="smtp_from_name" label="发件人名称" rules={[{ required: true, message: '请输入发件人名称' }]}>
-                            <Input placeholder="MuMuAINovel" />
+                            <Input placeholder="墨小语" />
                           </Form.Item>
                         </Col>
                       </Row>

@@ -102,6 +102,12 @@ export default function UserMenu({ showFullInfo = false, compact = false }: User
       }
     ] : []),
     {
+      key: 'subscription',
+      icon: <CrownOutlined />,
+      label: '订阅套餐',
+      onClick: () => navigate('/pricing'),
+    },
+    {
       key: 'change-password',
       icon: <LockOutlined />,
       label: '修改密码',

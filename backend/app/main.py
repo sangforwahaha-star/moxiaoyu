@@ -126,7 +126,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=config_settings.app_name,
     version=config_settings.app_version,
-    description="AI写小说工具 - 智能小说创作助手",
+    description="墨小语 - 专业AI网文创作平台",
     lifespan=lifespan
 )
 
@@ -209,7 +209,8 @@ from app.api import (
     auth, users, settings, writing_styles, memories,
     mcp_plugins, admin, inspiration, prompt_templates,
     changelog, careers, foreshadows, prompt_workshop, book_import,
-    project_covers, project_agent, tasks, skills, announcements
+    project_covers, project_agent, tasks, skills, announcements, subscription,
+    novel_ai, payment
 )
 
 app.include_router(auth.router, prefix="/api")
@@ -240,6 +241,9 @@ app.include_router(prompt_workshop.router, prefix="/api")  # 提示词工坊API
 app.include_router(book_import.router, prefix="/api")  # 拆书导入API
 app.include_router(tasks.router, prefix="/api")  # 后台任务API
 app.include_router(announcements.router, prefix="/api")  # 公告API
+app.include_router(subscription.router, prefix="/api")  # 订阅管理API
+app.include_router(payment.router, prefix="/api")  # 支付管理API
+app.include_router(novel_ai.router, prefix="/api")  # 网文专属AI功能API
 
 if getattr(sys, "frozen", False):
     static_dir = Path(sys._MEIPASS) / "backend" / "static"
@@ -293,7 +297,7 @@ else:
     @app.get("/")
     async def root():
         return {
-            "message": "欢迎使用MuMuAINovel",
+            "message": "欢迎使用墨小语",
             "version": config_settings.app_version,
             "docs": "/docs",
             "notice": "请先构建前端: cd frontend && npm run build"

@@ -37,7 +37,7 @@ def normalize_provider(provider: Optional[str]) -> Optional[str]:
         return None
 
     normalized = provider.lower().strip()
-    if normalized == "mumu":
+    if normalized in ("mumu", "deepseek"):
         return "openai"
     return normalized
 

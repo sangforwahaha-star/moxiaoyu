@@ -1,4 +1,4 @@
-# MuMuAINovel 📚✨
+# 墨小语 📚✨
 
 <div align="center">
 
@@ -71,7 +71,7 @@
 <table>
 <tr>
 <td width="200" align="center" valign="middle"><a href="https://www.apophis.uk/"><img src="images/apophis.png" alt="ApophisCode 中转站" width="180"></a></td>
-<td valign="middle">感谢 <strong>ApophisCode 中转站</strong> 赞助支持本项目！ApophisCode 为 MuMuAINovel 长篇创作提供稳定又实惠的模型补给，写大纲、搭世界观、生成章节不卡顿，支持第三方 AI API。全新启航限时福利倍率：Claude Fable 5.1 满血 Max (1.4x)、Claude Opus 5 Kiro (0.25x)、GPT-6 Astra (0.08x)。新用户进交流群（425421707）绑定账号即赠尝鲜额度，每日签到还能继续领！点击 <a href="https://www.apophis.uk/">此处</a> 前往起飞站开用。</td>
+<td valign="middle">感谢 <strong>ApophisCode 中转站</strong> 赞助支持本项目！ApophisCode 为 墨小语 长篇创作提供稳定又实惠的模型补给，写大纲、搭世界观、生成章节不卡顿，支持第三方 AI API。全新启航限时福利倍率：Claude Fable 5.1 满血 Max (1.4x)、Claude Opus 5 Kiro (0.25x)、GPT-6 Astra (0.08x)。新用户进交流群（425421707）绑定账号即赠尝鲜额度，每日签到还能继续领！点击 <a href="https://www.apophis.uk/">此处</a> 前往起飞站开用。</td>
 </tr>
 <tr>
 <td width="200" align="center" valign="middle"><a href="https://api.atku.cn"><img src="images/conduit.jpg" alt="Conduit 消息推送服务" width="180"></a></td>
@@ -196,8 +196,8 @@
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/xiamuceer-j/MuMuAINovel.git
-cd MuMuAINovel
+git clone https://github.com/xiamuceer-j/墨小语.git
+cd 墨小语
 
 # 2. 配置环境变量（必需）
 cp backend/.env.example .env
@@ -225,7 +225,7 @@ docker-compose up -d
 
 ```bash
 # 1. 拉取最新镜像（已包含模型文件）
-docker pull mumujie/mumuainovel:latest
+docker pull moxiaoyu/moxiaoyu:latest
 
 # 2. 创建 docker-compose.yml（点击下方展开查看完整配置）
 ```
@@ -237,10 +237,10 @@ docker pull mumujie/mumuainovel:latest
 services:
   postgres:
     image: postgres:18-alpine
-    container_name: mumuainovel-postgres
+    container_name: moxiaoyu-postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-mumuai_novel}
-      POSTGRES_USER: ${POSTGRES_USER:-mumuai}
+      POSTGRES_DB: ${POSTGRES_DB:-moxiaoyu}
+      POSTGRES_USER: ${POSTGRES_USER:-moxiaoyu}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-123456}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
       TZ: ${TZ:-Asia/Shanghai}
@@ -251,7 +251,7 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mumuai} -d ${POSTGRES_DB:-mumuai_novel}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-moxiaoyu} -d ${POSTGRES_DB:-moxiaoyu}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -285,9 +285,9 @@ services:
       - -c
       - max_wal_size=${POSTGRES_MAX_WAL_SIZE:-4GB}
 
-  mumuainovel:
-    image: mumujie/mumuainovel:latest
-    container_name: mumuainovel
+  moxiaoyu:
+    image: moxiaoyu/moxiaoyu:latest
+    container_name: moxiaoyu
     depends_on:
       postgres:
         condition: service_healthy
@@ -299,13 +299,13 @@ services:
       - ./storage/generated_covers:/app/backend/storage/generated_covers
     environment:
       # 应用配置
-      - APP_NAME=${APP_NAME:-MuMuAINovel}
+      - APP_NAME=${APP_NAME:-墨小语}
       - APP_VERSION=${APP_VERSION:-1.5.6}
       - APP_HOST=${APP_HOST:-0.0.0.0}
       - APP_PORT=8000
       - DEBUG=${DEBUG:-false}
       # 数据库配置
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-mumuai}:${POSTGRES_PASSWORD:-123456}@postgres:5432/${POSTGRES_DB:-mumuai_novel}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-moxiaoyu}:${POSTGRES_PASSWORD:-123456}@postgres:5432/${POSTGRES_DB:-moxiaoyu}
       - DB_HOST=postgres
       - DB_PORT=5432
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-123456}
@@ -413,7 +413,7 @@ cp .env.example .env
 # 启动 PostgreSQL（可使用 Docker）
 docker run -d --name postgres \
   -e POSTGRES_PASSWORD=your_password \
-  -e POSTGRES_DB=mumuai_novel \
+  -e POSTGRES_DB=moxiaoyu \
   -p 5432:5432 \
   postgres:18-alpine
 
@@ -438,7 +438,7 @@ npm run build  # 生产构建
 
 ```bash
 # PostgreSQL 数据库（必需）
-DATABASE_URL=postgresql+asyncpg://mumuai:your_password@postgres:5432/mumuai_novel
+DATABASE_URL=postgresql+asyncpg://moxiaoyu:your_password@postgres:5432/moxiaoyu
 POSTGRES_PASSWORD=your_secure_password
 
 # AI 服务
@@ -519,7 +519,7 @@ OPENAI_BASE_URL=https://your-proxy-service.com/v1
   - 初始化脚本: `backend/scripts/init_postgres.sql`（自动挂载）
   - 优化配置: 支持 80-150 并发用户
 
-- **mumuainovel**: 主应用服务
+- **moxiaoyu**: 主应用服务
   - 端口: 8000
   - 日志目录: `./logs`
   - 配置挂载: `.env` 文件
@@ -576,7 +576,7 @@ ports:
 ## 📁 项目结构
 
 ```
-MuMuAINovel/
+墨小语/
 ├── backend/                 # 后端服务
 │   ├── app/
 │   │   ├── api/            # API 路由
@@ -631,8 +631,8 @@ MuMuAINovel/
 
 感谢所有为本项目做出贡献的开发者！
 
-<a href="https://github.com/xiamuceer-j/MuMuAINovel/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=xiamuceer-j/MuMuAINovel" />
+<a href="https://github.com/xiamuceer-j/墨小语/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=xiamuceer-j/墨小语" />
 </a>
 
 ## 📝 许可证
@@ -655,7 +655,7 @@ MuMuAINovel/
 
 ## 📧 联系方式
 
-- 提交 [Issue](https://github.com/xiamuceer-j/MuMuAINovel/issues)
+- 提交 [Issue](https://github.com/xiamuceer-j/墨小语/issues)
 - Linux DO [讨论](https://linux.do/t/topic/1106333)
 - 加入QQ群 [QQ群](frontend/public/qq.jpg)
 - 加入WX群 [WX群](frontend/public/WX.png)
@@ -672,11 +672,11 @@ Made with ❤️
 
 ## Star History
 
-<a href="https://star-history.dera.page/#xiamuceer-j/MuMuAINovel&type=date&legend=top-left">
+<a href="https://star-history.dera.page/#xiamuceer-j/墨小语&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=xiamuceer-j/MuMuAINovel&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=xiamuceer-j/MuMuAINovel&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=xiamuceer-j/MuMuAINovel&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=xiamuceer-j/墨小语&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=xiamuceer-j/墨小语&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=xiamuceer-j/墨小语&type=date&legend=top-left" />
  </picture>
 </a>
 
