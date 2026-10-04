@@ -473,6 +473,12 @@ textarea {
   border: 1px solid #334155;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   padding: 36px 32px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 .login-card-title {
@@ -683,6 +689,34 @@ textarea {
   transform: scale(0.98);
 }
 
+/* ===== Enhanced card hover effect ===== */
+.ant-card {
+  transition: all 200ms ease-out !important;
+}
+
+.ant-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--mxy-shadow-lg) !important;
+}
+
+/* ===== Enhanced button effects ===== */
+.ant-btn {
+  transition: all 150ms ease-out !important;
+}
+
+.ant-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.ant-btn:active:not(:disabled) {
+  transform: scale(0.98) !important;
+}
+
+/* Primary button enhanced glow effect */
+.ant-btn-primary:hover:not(:disabled) {
+  box-shadow: 0 4px 16px rgba(22, 93, 255, 0.35) !important;
+}
+
 /* ===== Page transitions ===== */
 @keyframes mxy-page-enter {
   from {
@@ -736,18 +770,6 @@ textarea {
 }
 
 /* ===== Global Ant Design micro-interaction overrides ===== */
-.ant-btn {
-  transition: all 150ms ease-out !important;
-}
-
-.ant-btn:hover {
-  transform: scale(1.02);
-}
-
-.ant-btn:active {
-  transform: scale(0.98);
-}
-
 .ant-input,
 .ant-input-affix-wrapper,
 .ant-select-selector,
@@ -759,14 +781,16 @@ textarea {
 .ant-input-affix-wrapper-focused,
 .ant-select-focused .ant-select-selector,
 .ant-picker-focused {
-  box-shadow: 0 0 0 3px rgba(22, 93, 255, 0.12) !important;
+  box-shadow: 0 0 0 3px rgba(22, 93, 255, 0.12), 0 0 12px rgba(22, 93, 255, 0.2) !important;
+  border-color: var(--mxy-primary) !important;
 }
 
 [data-theme-resolved='dark'] .ant-input:focus,
 [data-theme-resolved='dark'] .ant-input-affix-wrapper-focused,
 [data-theme-resolved='dark'] .ant-select-focused .ant-select-selector,
 [data-theme-resolved='dark'] .ant-picker-focused {
-  box-shadow: 0 0 0 3px rgba(22, 93, 255, 0.2) !important;
+  box-shadow: 0 0 0 3px rgba(22, 93, 255, 0.2), 0 0 16px rgba(22, 93, 255, 0.3) !important;
+  border-color: var(--mxy-primary) !important;
 }
 
 .mxy-empty-desc {

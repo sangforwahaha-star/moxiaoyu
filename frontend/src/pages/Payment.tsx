@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button, Typography, message, Spin, Result } from 'antd';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -9,6 +9,7 @@ import {
   WechatOutlined,
   SafetyCertificateOutlined,
   CloseCircleOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons';
 import { paymentApi, type OrderInfo } from '../services/paymentService';
 import { authApi } from '../services/api';
@@ -17,20 +18,19 @@ import './Payment.css';
 const { Title, Text } = Typography;
 
 type PaymentMethod = 'alipay' | 'wechat';
-type PageState = 'loading' | 'confirm' | 'paying' | 'success' | 'error' | 'expired';
+type PageState = 'loading' | 'confirm' | 'redirecting' | 'success' | 'error' | 'expired';
 
 export default function Payment() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const level = searchParams.get('level') || '';
   const period = searchParams.get('period') || 'monthly';
+  const orderIdFromUrl = searchParams.get('order_id');
 
   const [pageState, setPageState] = useState<PageState>('loading');
   const [order, setOrder] = useState<OrderInfo | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('alipay');
-  const [countdown, setCountdown] = useState(0);
   const pollRef = useRef<ReturnType<typeof setInterval>>();
-  const countdownRef = useRef<ReturnType<typeof setInterval>>();
 
   useEffect(() => {
     const init = async () => {
@@ -46,11 +46,48 @@ export default function Payment() {
         return;
       }
 
+      // 如果URL中有order_id，说明是从支付页面返回的，检查支付状态
+      if (orderIdFromUrl) {
+        try {
+          const orderStatus = await paymentApi.getOrderStatus(orderIdFromUrl);
+          if (orderStatus.status === 'paid') {
+            setPageState('success');
+            return;
+          } else if (orderStatus.status === 'expired') {
+            setPageState('expired');
+            return;
+          } else {
+            // 订单仍处于pending状态，创建一个新订单
+            try {
+              const orderInfo = await paymentApi.createOrder(level, period);
+              setOrder(orderInfo);
+              setPageState('confirm');
+              return;
+            } catch {
+              message.error('创建订单失败');
+              setPageState('error');
+              return;
+            }
+          }
+        } catch {
+          // 获取订单状态失败，尝试创建新订单
+          try {
+            const orderInfo = await paymentApi.createOrder(level, period);
+            setOrder(orderInfo);
+            setPageState('confirm');
+            return;
+          } catch {
+            message.error('创建订单失败');
+            setPageState('error');
+            return;
+          }
+        }
+      }
+
+      // 正常流程：创建新订单
       try {
         const orderInfo = await paymentApi.createOrder(level, period);
         setOrder(orderInfo);
-        const expireTime = new Date(orderInfo.expire_at).getTime();
-        setCountdown(Math.max(0, Math.floor((expireTime - Date.now()) / 1000)));
         setPageState('confirm');
       } catch {
         message.error('创建订单失败');
@@ -61,46 +98,51 @@ export default function Payment() {
 
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
-      if (countdownRef.current) clearInterval(countdownRef.current);
     };
-  }, [level, period, navigate]);
-
-  const startCountdown = useCallback(() => {
-    if (countdownRef.current) clearInterval(countdownRef.current);
-    countdownRef.current = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(countdownRef.current);
-          setPageState('expired');
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, []);
+  }, [level, period, navigate, orderIdFromUrl]);
 
   const handlePay = async () => {
     if (!order) return;
-    setPageState('paying');
-    startCountdown();
+    setPageState('redirecting');
 
     try {
-      const result = await paymentApi.simulatePayment(order.order_id, paymentMethod);
-      if (result.success) {
-        setPageState('success');
-        if (countdownRef.current) clearInterval(countdownRef.current);
+      // 尝试获取真实支付链接
+      const result = await paymentApi.getPayUrl(order.order_id, paymentMethod);
+      if (result.pay_url) {
+        // 跳转到支付页面
+        window.location.href = result.pay_url;
       } else {
-        setPageState('error');
+        // 如果没有返回支付链接（易支付未配置），使用模拟支付
+        message.info('正在模拟支付流程...');
+        const simResult = await paymentApi.simulatePayment(order.order_id, paymentMethod);
+        if (simResult.success) {
+          setPageState('success');
+        } else {
+          setPageState('error');
+        }
       }
-    } catch {
-      setPageState('error');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
+      const detail = err.response?.data?.detail || '支付发起失败';
+      
+      if (detail.includes('未启用') || detail.includes('未配置')) {
+        // 易支付未配置，使用模拟支付
+        message.info('正在模拟支付流程...');
+        try {
+          const simResult = await paymentApi.simulatePayment(order.order_id, paymentMethod);
+          if (simResult.success) {
+            setPageState('success');
+          } else {
+            setPageState('error');
+          }
+        } catch {
+          setPageState('error');
+        }
+      } else {
+        message.error(detail);
+        setPageState('confirm');
+      }
     }
-  };
-
-  const formatCountdown = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
   if (pageState === 'loading') {
@@ -143,6 +185,34 @@ export default function Payment() {
       </nav>
 
       <div className="payment-content">
+        {pageState === 'redirecting' && order && (
+          <div className="payment-card">
+            <div className="payment-card-header">
+              <LoadingOutlined className="payment-paying-icon" style={{ color: '#165DFF' }} />
+              <Title level={4} className="payment-card-title">正在跳转支付</Title>
+            </div>
+
+            <div className="payment-qr-area" style={{ textAlign: 'center', padding: '40px 0' }}>
+              <Spin size="large" tip="正在打开支付页面..." />
+              <Text type="secondary" style={{ display: 'block', marginTop: 16 }}>
+                {paymentMethod === 'alipay' ? '支付宝' : '微信'}支付 ¥{order.amount_yuan}
+              </Text>
+              <Text type="secondary" style={{ display: 'block', marginTop: 8, fontSize: 12 }}>
+                订单号：{order.order_id}
+              </Text>
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: 24 }}>
+              <Text type="secondary" style={{ fontSize: 13 }}>
+                支付完成后页面将自动跳转，如未跳转请
+              </Text>
+              <Button type="link" onClick={() => setPageState('confirm')}>
+                返回重试
+              </Button>
+            </div>
+          </div>
+        )}
+
         {pageState === 'confirm' && order && (
           <div className="payment-card">
             <div className="payment-card-header">
@@ -203,71 +273,6 @@ export default function Payment() {
             <Text type="secondary" className="payment-disclaimer">
               支付即表示同意《墨小语服务协议》· 支持7天无理由退款
             </Text>
-          </div>
-        )}
-
-        {pageState === 'paying' && order && (
-          <div className="payment-card">
-            <div className="payment-card-header">
-              <ClockCircleOutlined className="payment-paying-icon" />
-              <Title level={4} className="payment-card-title">等待支付</Title>
-            </div>
-
-            <div className="payment-qr-area">
-              <div className={`payment-qr-placeholder ${paymentMethod}`}>
-                {paymentMethod === 'alipay' ? (
-                  <AlipayCircleOutlined className="payment-qr-icon" />
-                ) : (
-                  <WechatOutlined className="payment-qr-icon" />
-                )}
-                <Text className="payment-qr-text">
-                  {paymentMethod === 'alipay' ? '支付宝' : '微信'}扫码支付
-                </Text>
-              </div>
-              <div className="payment-qr-info">
-                <Text type="secondary" style={{ fontSize: 13 }}>
-                  订单号：{order.order_id}
-                </Text>
-                <Text type="secondary" style={{ fontSize: 13 }}>
-                  支付金额：<Text strong style={{ color: 'var(--mxy-text-primary)' }}>¥{order.amount_yuan}</Text>
-                </Text>
-                <Text type={countdown < 60 ? 'danger' : 'secondary'} style={{ fontSize: 13 }}>
-                  剩余时间：{formatCountdown(countdown)}
-                </Text>
-              </div>
-            </div>
-
-            <div className="payment-paying-actions">
-              <Button
-                type="primary"
-                block
-                size="large"
-                className="payment-simulate-btn"
-                onClick={async () => {
-                  try {
-                    const result = await paymentApi.simulatePayment(order.order_id, paymentMethod);
-                    if (result.success) {
-                      setPageState('success');
-                      if (countdownRef.current) clearInterval(countdownRef.current);
-                    }
-                  } catch {
-                    message.error('支付模拟失败');
-                  }
-                }}
-              >
-                模拟支付成功（测试用）
-              </Button>
-              <Button
-                block
-                size="large"
-                onClick={() => {
-                  if (countdownRef.current) clearInterval(countdownRef.current);
-                  setPageState('confirm');
-                }}
-              >
-                取消支付
-              </Button>
-            </div>
           </div>
         )}
 

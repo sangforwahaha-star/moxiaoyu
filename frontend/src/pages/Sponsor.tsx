@@ -110,7 +110,7 @@ export default function Sponsor() {
                                 SUPPORT 墨小语
                             </Text>
                             <Title level={4} style={{ color: token.colorWhite, marginTop: '8px', marginBottom: '8px' }}>
-                                📚 墨小语 - 基于 AI 的智能小说创作助手
+                                墨小语 - AI驱动的专业网文创作平台
                             </Title>
                         </div>
                     </div>

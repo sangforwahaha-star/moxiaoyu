@@ -137,6 +137,13 @@ class Settings(BaseSettings):
     EMAIL_VERIFICATION_CODE_TTL_MINUTES: int = 10
     EMAIL_VERIFICATION_RESEND_INTERVAL_SECONDS: int = 60
     
+    # 易支付配置
+    EASY_PAY_ENABLED: bool = False
+    EASY_PAY_PID: Optional[str] = None  # 商户ID
+    EASY_PAY_API_KEY: Optional[str] = None  # 商户密钥
+    EASY_PAY_GATEWAY_URL: Optional[str] = None  # 支付网关地址
+    EASY_PAY_NOTIFY_URL: Optional[str] = None  # 异步回调地址
+    
     # 提示词工坊配置
     WORKSHOP_MODE: str = "server"  # client: 本地部署实例, server: 云端中央服务器
     WORKSHOP_CLOUD_URL: str = ""  # 云端服务地址（server模式下不使用）

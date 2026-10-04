@@ -59,4 +59,7 @@ export const paymentApi = {
 
   simulatePayment: (orderId: string, paymentMethod: string = 'alipay') =>
     api.post<SimulateResult>('/payment/simulate', { order_id: orderId, payment_method: paymentMethod }).then((res) => res.data),
+
+  getPayUrl: (orderId: string, paymentMethod: string = 'alipay') =>
+    api.post<{ pay_url: string }>('/payment/get-pay-url', { order_id: orderId, payment_method: paymentMethod }).then((res) => res.data),
 };

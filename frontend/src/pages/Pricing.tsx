@@ -17,45 +17,37 @@ import './Pricing.css';
 
 const { Title, Text } = Typography;
 
-interface TierDisplay {
-  level: string;
-  name: string;
-  icon: React.ReactNode;
-  description: string;
-  features: string[];
-  priceMonthly: number;
-  priceYearly: number;
-  recommended: boolean;
-  dailyLimit: string;
-  monthlyWordLimit: string;
-  projectLimit: string;
-}
+// 默认套餐数据
+const DEFAULT_TIERS: SubscriptionTier[] = [
+  { level: 'free', name: '免费版', daily_limit: 3, monthly_word_limit: 10000, project_limit: 2, price_monthly: 0, price_yearly: 0, recommended: false, features: ['最多创建2个项目', '每月AI生成字数：1万字', '基础模型调用', '世界设定、角色管理', '基础大纲生成', '社区支持'] },
+  { level: 'basic', name: '基础版', daily_limit: 30, monthly_word_limit: 100000, project_limit: 999999, price_monthly: 29, price_yearly: 299, recommended: false, features: ['无限项目数', '每月AI生成字数：10万字', '全部基础模型', '全部功能模块', '导出TXT/Word', '邮件支持'] },
+  { level: 'pro', name: '专业版', daily_limit: 999999, monthly_word_limit: 500000, project_limit: 999999, price_monthly: 59, price_yearly: 599, recommended: true, features: ['无限项目数', '每月AI生成字数：50万字', '全部高级模型', '批量生成章节', '角色关系图谱', '剧情分析', '优先客服支持'] },
+  { level: 'enterprise', name: '企业版', daily_limit: 999999, monthly_word_limit: 999999999, project_limit: 999999, price_monthly: 199, price_yearly: 1999, recommended: false, features: ['5个团队席位', '无限AI生成字数', '全部高级模型', '团队协作功能', '权限管理', '专属客服'] },
+];
+
+// 套餐图标映射
+const TIER_ICONS: Record<string, React.ReactNode> = {
+  free: <ThunderboltOutlined />,
+  basic: <RocketOutlined />,
+  pro: <CrownOutlined />,
+  enterprise: <TeamOutlined />,
+};
+
+// 套餐描述映射
+const TIER_DESCRIPTIONS: Record<string, string> = {
+  free: '适合初次体验，感受AI创作的魅力',
+  basic: '个人创作者的理想选择',
+  pro: '全职作者与重度创作者首选',
+  enterprise: '工作室与团队协作方案',
+};
 
 const FAQ_DATA = [
-  {
-    q: '可以随时更换订阅计划吗？',
-    a: '可以。升级立即生效，差价按剩余天数折算；降级将在当前周期结束后生效。',
-  },
-  {
-    q: '支持哪些支付方式？',
-    a: '目前支持支付宝和微信支付。企业版用户还可选择对公转账和开具发票。',
-  },
-  {
-    q: '月付和年付有什么区别？',
-    a: '年付享受约17%的折扣，相当于每年免费使用2个月。其他功能权益完全相同。',
-  },
-  {
-    q: '"AI生成字数"是什么意思？',
-    a: '指AI为你生成的小说文本总字数，包括章节内容、大纲、角色描述等所有AI输出。输入（你的提示词）不计入。',
-  },
-  {
-    q: '免费版有使用期限吗？',
-    a: '没有。免费版永久可用，适合轻度体验。如果创作频率较高，建议升级到基础版或专业版以获得更好的体验。',
-  },
-  {
-    q: '企业版如何购买额外席位？',
-    a: '企业版默认包含5个席位。如需更多，请联系客服获取定制方案：support@moxiaoyu.pro',
-  },
+  { q: '可以随时更换订阅计划吗？', a: '可以。升级立即生效，差价按剩余天数折算；降级将在当前周期结束后生效。' },
+  { q: '支持哪些支付方式？', a: '目前支持支付宝和微信支付。企业版用户还可选择对公转账和开具发票。' },
+  { q: '月付和年付有什么区别？', a: '年付享受约17%的折扣，相当于每年免费使用2个月。其他功能权益完全相同。' },
+  { q: '"AI生成字数"是什么意思？', a: '指AI为你生成的小说文本总字数，包括章节内容、大纲、角色描述等所有AI输出。输入（你的提示词）不计入。' },
+  { q: '免费版有使用期限吗？', a: '没有。免费版永久可用，适合轻度体验。如果创作频率较高，建议升级到基础版或专业版以获得更好的体验。' },
+  { q: '企业版如何购买额外席位？', a: '企业版默认包含5个席位。如需更多，请联系客服获取定制方案：support@moxiaoyu.pro' },
 ];
 
 function formatLimit(val: number): string {
@@ -74,149 +66,97 @@ function formatDailyLimit(val: number): string {
   return `${val}次/日`;
 }
 
+// 价格动画组件 - 带 key 强制重新渲染
 function AnimatedPrice({ value }: { value: number }) {
   const [displayValue, setDisplayValue] = useState(value);
-  const [animating, setAnimating] = useState(false);
-  const prevValue = useRef(value);
+  const prevValueRef = useRef(value);
   const rafRef = useRef<number>();
 
   useEffect(() => {
-    if (prevValue.current === value) return;
-
-    setAnimating(true);
-    const from = prevValue.current;
+    const from = prevValueRef.current;
     const to = value;
-    const duration = 400;
+    
+    // 如果值没变，不动画
+    if (from === to) return;
+    
+    const duration = 300;
     const startTime = performance.now();
 
     const animate = (currentTime: number) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const current = Math.round(from + (to - from) * eased);
-      setDisplayValue(current);
+      // easeOutExpo
+      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const current = from + (to - from) * eased;
+      setDisplayValue(Math.round(current * 100) / 100);
 
       if (progress < 1) {
         rafRef.current = requestAnimationFrame(animate);
       } else {
         setDisplayValue(to);
-        setAnimating(false);
-        prevValue.current = to;
+        prevValueRef.current = to;
       }
     };
 
     rafRef.current = requestAnimationFrame(animate);
+
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [value]);
 
-  return (
-    <span className={`pricing-card-price-amount ${animating ? 'price-animating' : ''}`}>
-      {displayValue}
-    </span>
-  );
+  return <span className="pricing-card-price-amount">{displayValue}</span>;
 }
 
 export default function Pricing() {
   const navigate = useNavigate();
   const [isYearly, setIsYearly] = useState(true);
   const [currentSub, setCurrentSub] = useState<SubscriptionInfo | null>(null);
-  const [tiers, setTiers] = useState<SubscriptionTier[]>([]);
+  const [tiers, setTiers] = useState<SubscriptionTier[]>(DEFAULT_TIERS);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const loadData = async () => {
       try {
+        // 检查登录状态
         await authApi.getCurrentUser();
         setIsLoggedIn(true);
 
+        // 获取订阅信息
         const info = await subscriptionApi.getSubscriptionInfo();
         setCurrentSub(info);
-      } catch {
+
+        // 获取套餐列表
+        const tiersData = await subscriptionApi.getSubscriptionTiers();
+        if (tiersData && tiersData.length > 0) {
+          setTiers(tiersData);
+        }
+      } catch (error) {
+        console.error('加载订阅信息失败:', error);
         setIsLoggedIn(false);
+        setCurrentSub(null);
       }
     };
-    checkAuth();
 
-    subscriptionApi.getSubscriptionTiers()
-      .then(setTiers)
-      .catch(() => {
-        setTiers([
-          { level: 'free', name: '免费版', daily_limit: 3, monthly_word_limit: 10000, project_limit: 2, price_monthly: 0, price_yearly: 0, recommended: false, features: [] },
-          { level: 'basic', name: '基础版', daily_limit: 30, monthly_word_limit: 100000, project_limit: 999999, price_monthly: 29, price_yearly: 299, recommended: false, features: [] },
-          { level: 'pro', name: '专业版', daily_limit: 999999, monthly_word_limit: 500000, project_limit: 999999, price_monthly: 59, price_yearly: 599, recommended: true, features: [] },
-          { level: 'enterprise', name: '企业版', daily_limit: 999999, monthly_word_limit: 999999999, project_limit: 999999, price_monthly: 199, price_yearly: 1999, recommended: false, features: [] },
-        ]);
-      });
+    loadData();
   }, []);
-
-  const tierDisplayMap: Record<string, Omit<TierDisplay, 'priceMonthly' | 'priceYearly' | 'features' | 'recommended'>> = {
-    free: {
-      level: 'free',
-      name: '免费版',
-      icon: <ThunderboltOutlined />,
-      description: '适合初次体验，感受AI创作的魅力',
-      dailyLimit: '3次/日',
-      monthlyWordLimit: '1万字',
-      projectLimit: '2个',
-    },
-    basic: {
-      level: 'basic',
-      name: '基础版',
-      icon: <RocketOutlined />,
-      description: '个人创作者的理想选择',
-      dailyLimit: '30次/日',
-      monthlyWordLimit: '10万字',
-      projectLimit: '无限',
-    },
-    pro: {
-      level: 'pro',
-      name: '专业版',
-      icon: <CrownOutlined />,
-      description: '全职作者与重度创作者首选',
-      dailyLimit: '无限',
-      monthlyWordLimit: '50万字',
-      projectLimit: '无限',
-    },
-    enterprise: {
-      level: 'enterprise',
-      name: '企业版',
-      icon: <TeamOutlined />,
-      description: '工作室与团队协作方案',
-      dailyLimit: '无限',
-      monthlyWordLimit: '无限',
-      projectLimit: '无限',
-    },
-  };
-
-  const buildTierDisplay = useCallback((tier: SubscriptionTier): TierDisplay => {
-    const base = tierDisplayMap[tier.level] || tierDisplayMap.free;
-    return {
-      ...base,
-      priceMonthly: tier.price_monthly,
-      priceYearly: tier.price_yearly,
-      recommended: tier.recommended,
-      features: tier.features,
-    };
-  }, []);
-
-  const displayTiers = tiers.length > 0 ? tiers.map(buildTierDisplay) : [];
 
   const TIER_ORDER = ['free', 'basic', 'pro', 'enterprise'];
 
-  const handleSubscribe = async (tier: TierDisplay) => {
+  // 切换月付/年付
+  const handleToggle = useCallback(() => {
+    setIsYearly(prev => !prev);
+  }, []);
+
+  // 处理订阅按钮点击
+  const handleSubscribe = useCallback((tier: SubscriptionTier) => {
     if (!isLoggedIn) {
       navigate('/login?redirect=/pricing');
       return;
     }
 
     if (tier.level === 'free') {
-      if (currentSub?.subscription_level === 'free') {
-        message.info('你当前已是免费版');
-      } else {
-        message.info('免费版不支持主动切换，请联系客服');
-      }
+      message.info('免费版无需订阅');
       return;
     }
 
@@ -225,11 +165,13 @@ export default function Pricing() {
       return;
     }
 
-    navigate(`/payment?level=${tier.level}&period=${isYearly ? 'yearly' : 'monthly'}`);
-  };
+    // 跳转到支付页面
+    const period = isYearly ? 'yearly' : 'monthly';
+    navigate(`/payment?level=${tier.level}&period=${period}`);
+  }, [isLoggedIn, currentSub, isYearly, navigate]);
 
-  const getButtonText = (tier: TierDisplay): string => {
-    if (!isLoggedIn) return '登录后订阅';
+  // 获取按钮文本
+  const getButtonText = useCallback((tier: SubscriptionTier): string => {
     if (currentSub?.subscription_level === tier.level) return '当前套餐';
     if (tier.level === 'free') return '免费开始';
 
@@ -242,29 +184,25 @@ export default function Pricing() {
     }
 
     return targetIdx > currentIdx ? '升级套餐' : '切换套餐';
-  };
+  }, [currentSub]);
 
-  const getButtonClass = (tier: TierDisplay): string => {
+  // 获取按钮样式
+  const getButtonClass = useCallback((tier: SubscriptionTier): string => {
     const base = 'pricing-card-btn';
     if (tier.recommended) return `${base} ${base}-primary`;
+    if (currentSub?.subscription_level === tier.level) return base;
 
-    if (isLoggedIn && currentSub?.subscription_level !== 'free') {
-      const currentIdx = TIER_ORDER.indexOf(currentSub?.subscription_level || 'free');
-      const targetIdx = TIER_ORDER.indexOf(tier.level);
-      if (targetIdx > currentIdx) return `${base} ${base}-upgrade`;
-    }
-
-    if (isLoggedIn && currentSub?.subscription_level === 'free' && tier.level !== 'free') {
-      return `${base} ${base}-upgrade`;
-    }
+    const currentIdx = TIER_ORDER.indexOf(currentSub?.subscription_level || 'free');
+    const targetIdx = TIER_ORDER.indexOf(tier.level);
+    if (targetIdx > currentIdx) return `${base} ${base}-upgrade`;
 
     return base;
-  };
+  }, [currentSub]);
 
-  const isButtonDisabled = (tier: TierDisplay): boolean => {
-    if (!isLoggedIn) return false;
+  // 按钮是否禁用
+  const isButtonDisabled = useCallback((tier: SubscriptionTier): boolean => {
     return currentSub?.subscription_level === tier.level;
-  };
+  }, [currentSub]);
 
   const comparisonFeatures = [
     { name: '每日AI生成次数', key: 'daily', format: formatDailyLimit },
@@ -322,12 +260,12 @@ export default function Pricing() {
           从灵感到完稿，墨小语为每一位创作者提供恰到好处的AI助力
         </Text>
 
-        {/* Billing toggle */}
-        <div className="pricing-toggle-wrap">
+        {/* Billing toggle - 修复：使用 key 强制重新渲染动画 */}
+        <div className="pricing-toggle-wrap" key={`toggle-${isYearly}`}>
           <span className={`pricing-toggle-label ${!isYearly ? 'active' : ''}`}>月付</span>
           <button
             className={`pricing-toggle-switch ${isYearly ? 'yearly' : ''}`}
-            onClick={() => setIsYearly(!isYearly)}
+            onClick={handleToggle}
           >
             <span className="pricing-toggle-knob" />
           </button>
@@ -341,16 +279,17 @@ export default function Pricing() {
       {/* Cards */}
       <section className="pricing-cards-section">
         <div className="pricing-cards-grid">
-          {displayTiers.map((tier) => {
-            const price = isYearly ? tier.priceYearly : tier.priceMonthly;
+          {tiers.map((tier) => {
+            const price = isYearly ? tier.price_yearly : tier.price_monthly;
             const period = isYearly ? '/年' : '/月';
             const isCurrent = currentSub?.subscription_level === tier.level;
             const isRecommended = tier.recommended;
             const monthlyEquiv = isYearly && price > 0 ? Math.round(price / 12) : 0;
+            const annualSaving = !isYearly && price > 0 ? (tier.price_yearly - tier.price_monthly * 12) : 0;
 
             return (
               <div
-                key={tier.level}
+                key={`${tier.level}-${isYearly}`}
                 className={`pricing-card ${isRecommended ? 'pricing-card-recommended' : ''} ${isCurrent ? 'pricing-card-current' : ''}`}
               >
                 {isRecommended && (
@@ -363,12 +302,12 @@ export default function Pricing() {
                 )}
 
                 <div className="pricing-card-header">
-                  <div className="pricing-card-icon">{tier.icon}</div>
+                  <div className="pricing-card-icon">{TIER_ICONS[tier.level]}</div>
                   <h3 className="pricing-card-name">{tier.name}</h3>
-                  <p className="pricing-card-desc">{tier.description}</p>
+                  <p className="pricing-card-desc">{TIER_DESCRIPTIONS[tier.level]}</p>
                 </div>
 
-                <div className="pricing-card-price">
+                <div className="pricing-card-price" key={`price-${tier.level}-${isYearly}`}>
                   {price === 0 ? (
                     <span className="pricing-card-price-free">免费</span>
                   ) : (
@@ -385,7 +324,7 @@ export default function Pricing() {
                   )}
                   {!isYearly && price > 0 && (
                     <div className="pricing-card-price-annual">
-                      年付仅 ¥{tier.priceYearly}，省 ¥{tier.priceMonthly * 12 - tier.priceYearly}
+                      年付仅 ¥{tier.price_yearly}，省 ¥{-annualSaving}
                     </div>
                   )}
                 </div>
@@ -422,7 +361,7 @@ export default function Pricing() {
             <thead>
               <tr>
                 <th className="pricing-compare-th-feature">功能</th>
-                {displayTiers.map((t) => (
+                {tiers.map((t) => (
                   <th key={t.level} className={`pricing-compare-th ${t.recommended ? 'pricing-compare-th-highlight' : ''}`}>
                     {t.name}
                   </th>
@@ -433,12 +372,12 @@ export default function Pricing() {
               {comparisonFeatures.map((feat) => (
                 <tr key={feat.key} className="pricing-compare-row">
                   <td className="pricing-compare-td-name">{feat.name}</td>
-                  {displayTiers.map((tier, tierIdx) => {
+                  {tiers.map((tier, tierIdx) => {
                     let val: boolean | string | number = false;
                     if (feat.format) {
-                      if (feat.key === 'daily') val = tier.dailyLimit;
-                      else if (feat.key === 'monthly') val = tier.monthlyWordLimit;
-                      else if (feat.key === 'project') val = tier.projectLimit;
+                      if (feat.key === 'daily') val = formatDailyLimit(tier.daily_limit);
+                      else if (feat.key === 'monthly') val = formatLimit(tier.monthly_word_limit);
+                      else if (feat.key === 'project') val = formatProjectLimit(tier.project_limit);
                     } else if (feat.values) {
                       val = feat.values[tierIdx];
                     }
@@ -503,7 +442,7 @@ export default function Pricing() {
       {/* Footer */}
       <footer className="pricing-footer">
         <Text className="pricing-footer-text">
-          © 2024 墨小语 · 让创作更简单
+          © 2026 墨小语 · AI驱动的专业网文创作平台
         </Text>
       </footer>
     </div>

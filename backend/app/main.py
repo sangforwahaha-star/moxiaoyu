@@ -55,9 +55,18 @@ def get_static_media_type(path: Path) -> str:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """应用生命周期管理"""
+    # 初始化易支付网关
+    from app.services.easy_pay_gateway import init_pay_gateway
+    if config_settings.EASY_PAY_ENABLED:
+        init_pay_gateway(
+            pid=config_settings.EASY_PAY_PID,
+            api_key=config_settings.EASY_PAY_API_KEY,
+            gateway_url=config_settings.EASY_PAY_GATEWAY_URL,
+        )
+    
     # 注册MCP状态同步服务
     register_status_sync()
-
+    
     # 安全保障：确保后台任务表存在（兼容未执行Alembic迁移的旧部署）
     try:
         from app.database import get_engine

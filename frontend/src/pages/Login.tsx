@@ -574,7 +574,7 @@ export default function Login() {
 
       {/* Footer */}
       <div className="login-footer">
-        <span className="login-footer-text">&copy; 2026 墨小语 &middot; AI驱动的专业网文创作平台</span>
+        <span className="login-footer-text">© 2026 墨小语 · AI驱动的专业网文创作平台</span>
       </div>
     </div>
   );

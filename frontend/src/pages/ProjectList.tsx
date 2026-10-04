@@ -383,7 +383,7 @@ export default function ProjectList() {
   };
 
   const isMobile = window.innerWidth <= 768;
-  const headerHeight = 56;
+  const headerHeight = 48;
   const expandedSiderWidth = 200;
   const collapsedSiderWidth = 60;
   const siderWidth = collapsed ? collapsedSiderWidth : expandedSiderWidth;
@@ -528,7 +528,7 @@ export default function ProjectList() {
           zIndex: 1000
         }}>
           <div style={{
-            height: 56,
+            height: 48,
             display: 'flex',
             alignItems: 'center',
             padding: collapsed ? 0 : '0 12px',
@@ -607,7 +607,7 @@ export default function ProjectList() {
           </div>
 
           <div style={{
-            padding: collapsed ? '12px 8px' : 16,
+            padding: collapsed ? '12px 8px' : '12px 16px',
             borderTop: '1px solid rgba(255,255,255,0.08)',
             flexShrink: 0
           }}>
@@ -753,7 +753,7 @@ export default function ProjectList() {
             <h2 style={{
               margin: 0,
               color: token.colorText,
-              fontSize: '20px',
+              fontSize: '16px',
               fontWeight: 600,
               position: 'absolute',
               left: '50%',

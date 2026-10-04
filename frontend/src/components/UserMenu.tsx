@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Dropdown, Avatar, Space, Typography, message, Modal, Form, Input, Button, theme } from 'antd';
-import { UserOutlined, LogoutOutlined, TeamOutlined, CrownOutlined, LockOutlined } from '@ant-design/icons';
+import { Dropdown, Avatar, Space, Typography, message, Modal, Form, Input, Button, theme, Tag } from 'antd';
+import { UserOutlined, LogoutOutlined, TeamOutlined, CrownOutlined, LockOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { authApi } from '../services/api';
+import { subscriptionApi, type SubscriptionInfo } from '../services/subscriptionService';
 import type { User } from '../types';
 import type { MenuProps } from 'antd';
 import { useNavigate } from 'react-router-dom';
@@ -15,9 +16,17 @@ interface UserMenuProps {
   compact?: boolean;
 }
 
+const TIER_COLORS: Record<string, string> = {
+  free: '#86909C',
+  basic: '#165DFF',
+  pro: '#FAAD14',
+  enterprise: '#722ED1',
+};
+
 export default function UserMenu({ showFullInfo = false, compact = false }: UserMenuProps) {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [subInfo, setSubInfo] = useState<SubscriptionInfo | null>(null);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [changePasswordForm] = Form.useForm();
   const [changingPassword, setChangingPassword] = useState(false);
@@ -26,6 +35,7 @@ export default function UserMenu({ showFullInfo = false, compact = false }: User
 
   useEffect(() => {
     loadCurrentUser();
+    loadSubscriptionInfo();
   }, []);
 
   const loadCurrentUser = async () => {
@@ -34,6 +44,15 @@ export default function UserMenu({ showFullInfo = false, compact = false }: User
       setCurrentUser(user);
     } catch (error) {
       console.error('获取用户信息失败:', error);
+    }
+  };
+
+  const loadSubscriptionInfo = async () => {
+    try {
+      const info = await subscriptionApi.getSubscriptionInfo();
+      setSubInfo(info);
+    } catch {
+      // 静默失败，不影响用户体验
     }
   };
 
@@ -76,13 +95,34 @@ export default function UserMenu({ showFullInfo = false, compact = false }: User
     {
       key: 'user-info',
       label: (
-        <div style={{ padding: '8px 0' }}>
-          <Text strong>{currentUser?.display_name || currentUser?.username}</Text>
-          <br />
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            Trust Level: {currentUser?.trust_level}
-            {currentUser?.is_admin && ' · 管理员'}
-          </Text>
+        <div style={{ padding: '8px 0', minWidth: 220 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <Text strong style={{ fontSize: 15 }}>{currentUser?.display_name || currentUser?.username}</Text>
+            {currentUser?.is_admin && (
+              <Tag color="gold" style={{ fontSize: 11 }}>管理员</Tag>
+            )}
+          </div>
+          {subInfo && (
+            <div style={{
+              background: 'var(--mxy-bg-base)',
+              padding: '8px 10px',
+              borderRadius: 6,
+              marginTop: 6
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                <CrownOutlined style={{ color: TIER_COLORS[subInfo.subscription_level], fontSize: 12 }} />
+                <Text style={{ fontSize: 13, color: TIER_COLORS[subInfo.subscription_level] }}>
+                  {subInfo.subscription_name}
+                </Text>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <ThunderboltOutlined style={{ color: token.colorPrimary, fontSize: 12 }} />
+                <Text style={{ fontSize: 12, color: token.colorTextSecondary }}>
+                  今日剩余 {subInfo.daily_generation_remaining} 次
+                </Text>
+              </div>
+            </div>
+          )}
         </div>
       ),
       disabled: true,
@@ -105,7 +145,7 @@ export default function UserMenu({ showFullInfo = false, compact = false }: User
       key: 'subscription',
       icon: <CrownOutlined />,
       label: '订阅套餐',
-      onClick: () => navigate('/pricing'),
+      onClick: () => navigate('/subscription'),
     },
     {
       key: 'change-password',

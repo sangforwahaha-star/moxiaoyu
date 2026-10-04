@@ -1,5 +1,4 @@
-import { Modal, Button, Space, theme } from 'antd';
-import { useEffect, useState } from 'react';
+import { Modal, Button, Space, Typography, theme } from 'antd';
 
 interface AnnouncementModalProps {
   visible: boolean;
@@ -9,27 +8,8 @@ interface AnnouncementModalProps {
 }
 
 export default function AnnouncementModal({ visible, onClose, onDoNotShowToday, onNeverShow }: AnnouncementModalProps) {
-  const [qqImageError, setQqImageError] = useState(false);
-  const [wxImageError, setWxImageError] = useState(false);
   const { token } = theme.useToken();
   const alphaColor = (color: string, alpha: number) => `color-mix(in srgb, ${color} ${(alpha * 100).toFixed(0)}%, transparent)`;
-
-  useEffect(() => {
-    if (visible) {
-      setQqImageError(false);
-      setWxImageError(false);
-    }
-  }, [visible]);
-
-  const handleDoNotShowToday = () => {
-    onDoNotShowToday();
-    onClose();
-  };
-
-  const handleNeverShow = () => {
-    onNeverShow();
-    onClose();
-  };
 
   return (
     <Modal
@@ -40,7 +20,7 @@ export default function AnnouncementModal({ visible, onClose, onDoNotShowToday, 
           color: token.colorPrimary,
           textAlign: 'center',
         }}>
-          🎉 欢迎使用 AI小说创作助手
+          🎉 欢迎使用 墨小语
         </div>
       }
       open={visible}
@@ -48,7 +28,7 @@ export default function AnnouncementModal({ visible, onClose, onDoNotShowToday, 
       footer={
         <Space style={{ width: '100%', justifyContent: 'center' }}>
           <Button
-            onClick={handleDoNotShowToday}
+            onClick={onDoNotShowToday}
             size="large"
             style={{
               borderRadius: '8px',
@@ -60,7 +40,7 @@ export default function AnnouncementModal({ visible, onClose, onDoNotShowToday, 
           </Button>
           <Button
             type="primary"
-            onClick={handleNeverShow}
+            onClick={onNeverShow}
             size="large"
             style={{
               borderRadius: '8px',
@@ -75,7 +55,7 @@ export default function AnnouncementModal({ visible, onClose, onDoNotShowToday, 
           </Button>
         </Space>
       }
-      width={700}
+      width={600}
       centered
       styles={{
         body: {
@@ -94,148 +74,39 @@ export default function AnnouncementModal({ visible, onClose, onDoNotShowToday, 
         },
       }}
     >
-      <div style={{ textAlign: 'center' }}>
+      <div style={{ textAlign: 'center', padding: '16px 0' }}>
+        <Typography.Title level={4} style={{ marginBottom: 12 }}>
+          感谢使用墨小语 AI 创作平台
+        </Typography.Title>
+        <Typography.Paragraph style={{ fontSize: 15, color: token.colorTextSecondary, lineHeight: 1.8 }}>
+          墨小语是新一代 AI 驱动的专业网文创作平台，
+          <br />
+          帮助作者从灵感到成稿，轻松完成长篇创作。
+        </Typography.Paragraph>
         <div style={{
-          marginBottom: '12px',
-          fontSize: '15px',
-          color: token.colorTextSecondary,
-          lineHeight: '1.5',
-        }}>
-          <p style={{ marginBottom: '8px' }}>👋 欢迎加入我们的交流群！在这里你可以：</p>
-          <ul style={{
-            textAlign: 'left',
-            marginLeft: '40px',
-            marginTop: '0',
-            marginBottom: '12px',
-          }}>
-            <li>💬 与其他创作者交流心得</li>
-            <li>💡 获取最新功能更新和使用技巧</li>
-            <li>🐛 反馈问题和建议</li>
-            <li>📚 分享创作经验和灵感</li>
-          </ul>
-          <p style={{ fontWeight: 600, color: token.colorText, marginBottom: '12px' }}>
-            扫描下方二维码加入交流群：
-          </p>
-        </div>
-
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'flex-start',
-          gap: '24px',
-          padding: '16px',
+          marginTop: 20,
+          padding: 16,
           background: token.colorBgLayout,
-          borderRadius: '8px',
-          flexWrap: 'wrap',
+          borderRadius: 8,
+          border: `1px solid ${token.colorBorderSecondary}`,
         }}>
-          {/* QQ 二维码 */}
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            minWidth: '200px',
-          }}>
-            <p style={{ fontWeight: 600, color: token.colorText, marginBottom: '8px', fontSize: '14px' }}>
-              QQ交流群
-            </p>
-            {!qqImageError ? (
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                background: token.colorBgContainer,
-                borderRadius: '8px',
-                padding: '6px',
-                boxShadow: `0 2px 8px ${alphaColor(token.colorText, 0.12)}`,
-              }}>
-                <img
-                  src="/qq.jpg"
-                  alt="QQ交流群二维码"
-                  style={{
-                    maxWidth: '180px',
-                    maxHeight: '180px',
-                    width: 'auto',
-                    height: 'auto',
-                    display: 'block',
-                    objectFit: 'contain',
-                  }}
-                  onError={() => setQqImageError(true)}
-                />
-              </div>
-            ) : (
-              <div style={{
-                width: '180px',
-                height: '180px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                background: token.colorBgContainer,
-                borderRadius: '8px',
-                color: token.colorTextTertiary,
-              }}>
-                <p>二维码加载失败</p>
-              </div>
-            )}
-          </div>
-
-          {/* 微信二维码 */}
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            minWidth: '200px',
-          }}>
-            <p style={{ fontWeight: 600, color: token.colorText, marginBottom: '8px', fontSize: '14px' }}>
-              微信交流群
-            </p>
-            {!wxImageError ? (
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                background: token.colorBgContainer,
-                borderRadius: '8px',
-                padding: '6px',
-                boxShadow: `0 2px 8px ${alphaColor(token.colorText, 0.12)}`,
-              }}>
-                <img
-                  src="/WX.png"
-                  alt="微信交流群二维码"
-                  style={{
-                    maxWidth: '180px',
-                    maxHeight: '180px',
-                    width: 'auto',
-                    height: 'auto',
-                    display: 'block',
-                    objectFit: 'contain',
-                  }}
-                  onError={() => setWxImageError(true)}
-                />
-              </div>
-            ) : (
-              <div style={{
-                width: '180px',
-                height: '180px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                background: token.colorBgContainer,
-                borderRadius: '8px',
-                color: token.colorTextTertiary,
-              }}>
-                <p>二维码加载失败</p>
-              </div>
-            )}
-          </div>
+          <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
+            💡 快速开始
+          </Typography.Text>
+          <ul style={{ textAlign: 'left', margin: 0, paddingLeft: 24, color: token.colorTextSecondary }}>
+            <li>创建你的第一个小说项目</li>
+            <li>设置 AI 模型并开始创作</li>
+            <li>管理角色、关系和剧情大纲</li>
+            <li>享受 AI 带来的高效创作体验</li>
+          </ul>
         </div>
-
         <div style={{
-          marginTop: '16px',
+          marginTop: 16,
           padding: '10px',
           background: token.colorWarningBg,
-          borderRadius: '8px',
+          borderRadius: 8,
           border: `1px solid ${token.colorWarningBorder}`,
-          fontSize: '13px',
+          fontSize: 13,
           color: token.colorWarning,
         }}>
           💡 提示：选择"今日内不再展示"当天不再显示，选择"永不再展示"将永久隐藏此公告

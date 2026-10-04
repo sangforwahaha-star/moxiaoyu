@@ -135,12 +135,29 @@
   height: 20px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-  transition: transform var(--mxy-transition-fast);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15), 0 0 8px rgba(22, 93, 255, 0.3);
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 200ms ease;
 }
 
 .pricing-toggle-switch.yearly .pricing-toggle-knob {
   transform: translateX(22px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15), 0 0 12px rgba(22, 93, 255, 0.5);
+}
+
+/* Card price animation */
+.pricing-card-price-amount {
+  font-size: 44px;
+  font-weight: 800;
+  color: var(--mxy-text-primary);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  transition: opacity 0.15s ease, transform 0.2s ease;
+  display: inline-block;
+}
+
+.pricing-card-price-amount.price-animating {
+  opacity: 0;
+  transform: scale(0.9);
 }
 
 /* ===== Cards ===== */
